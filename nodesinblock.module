@@ -1,0 +1,214 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Nodes in block makes it possible to add multiple nodes in one block.
+ * TODO research multiple themes (admin theme vs output theme) rehash blocks on settings page ?
+ * TODO multilang
+ */
+
+/**
+ * Implementation of hook_perm().
+ */
+function nodesinblock_perm() {
+  return array('administer nodes in block');
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function nodesinblock_menu() {
+  $items = array();
+  $items['admin/settings/nodesinblock'] = array(
+    'title' => 'Nodes in block',
+    'description' => 'Configure settings for node in block.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('nodesinblock_settings'),
+    'access arguments' => array('administer nodes in block'),
+    'file' => 'nodesinblock.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_form_alter().
+ * Add Nodes in block fieldset.
+ */
+function nodesinblock_form_alter(&$form, $form_state, $form_id) {
+  $saved_types = variable_get('nodesinblock_contenttypes', array());
+  if (isset($form['#node']) && $form['#node']->type .'_node_form' == $form_id && $saved_types[$form['#node']->type] != '0') {
+
+    $delta = variable_get('nodesinblock_'. $form['#node']->type .'_block', array());
+
+    $options = array(0 => t('Disabled'), 1 => t('Enabled'));
+    if (module_exists('search')) {
+      $options[] = t('Enabled and exclude from search index');  
+    }
+    
+    if (!empty($form['nid']['#value']))
+    $node_info = db_fetch_array(db_query("SELECT * FROM {nodes_in_block} WHERE nid = %d", $form['nid']['#value']));
+    else $node_info = array('status' => 0, 'weight' => 0, 'visibility' => '');
+    
+    $form['nodesinblock'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Nodes in block'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    $form['nodesinblock']['nodesinblock_enable'] = array(
+      '#type' => 'select',
+      '#options' => $options,
+      '#default_value' => $node_info['status']
+    );
+    $form['nodesinblock']['nodesinblock_weight'] = array(
+      '#type' => 'weight',
+      '#title' => t('Weight'),
+      '#delta' => 50,
+      '#default_value' => $node_info['weight']
+    );
+    $form['nodesinblock']['nodesinblock_visibility'] = array(
+      '#type' => 'textarea',
+      '#title' => t('Visibility settings'),
+      '#description' => t('Enter one page per line as Drupal paths. The \'*\' character is a wildcard. Example paths are blog for the blog page and blog/* for every personal blog. &lt;front&gt; is the front page.'),
+      '#default_value' => $node_info['visibility']
+    );
+    $delta--;
+    $form['nodesinblock']['nodesinblock_delta'] = array(
+      '#type' => 'hidden',
+      '#value' => $delta,
+    );
+  }
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function nodesinblock_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  if (isset($node->nodesinblock_enable)) {
+    switch ($op) {
+      case 'validate':
+        _nodesinblock_validate($node);
+        break;
+      case 'insert':
+      case 'update':
+      case 'delete':
+      _nodesinblock_save($node, $op);
+    }
+  }
+}
+
+/**
+ * Implementation of hook_block().
+ */
+function nodesinblock_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $number_of_blocks = variable_get('nodesinblock_nrofblocks', 1);
+      for ($i = 0, $a = 1; $i < $number_of_blocks; $i++, $a++) {
+        $blocks[$i] = array(
+          'info' => t('Nodes in block !number', array('!number' => $a)),
+          'weight' => 0,
+          'enabled' => 0,
+          'region' => 'left',
+          'cache' => BLOCK_CACHE_PER_PAGE,
+        );
+      }
+      return $blocks;
+      break;
+    case 'view':
+      $a = $delta;
+      $a++;
+      $block = array(
+        'subject' => variable_get('nodesinblock_title_'. $delta, t('Nodes in block !number', array('!number' => $a))),
+        'content' => _nodesinblock_show($delta)
+      );
+      return $block;
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_update_index().
+ */
+function nodesinblock_update_index() {
+  $result = db_query("SELECT n.nid FROM {nodes_in_block} nib n INNER JOIN {search_dataset} s on s.sid = nib.nid WHERE status = 2");
+  while ($row = db_fetch_object($result)) {
+    search_wipe($row->nid, 'node');
+  }
+}
+
+/**
+ * Function callback: validate node. Returns error if visibility is empty and status is enabled.
+ */
+function _nodesinblock_validate($node) {
+  $visibility = $node->nodesinblock_visibility;
+  if ($node->nodesinblock_enable != '0' && empty($visibility)) {
+    form_set_error('nodesinblock_visibility', t('Visibility field is required.'));
+  }
+}
+
+/**
+ * Function callback: save node settings into nodesinblock table and update block visibility pages.
+ */
+function _nodesinblock_save($node, $op) {
+
+  // Delete old record.
+  db_query("DELETE FROM {nodes_in_block} WHERE nid = %d", $node->nid);
+  
+  // Save if node is not deleted
+  if ($op != 'delete') {
+    $nodeinblock = new stdClass;
+    $nodeinblock->nid = $node->nid;
+    $nodeinblock->bid = $node->nodesinblock_delta;
+    $nodeinblock->weight = $node->nodesinblock_weight;
+    $nodeinblock->status = $node->nodesinblock_enable;
+    $nodeinblock->visibility = trim($node->nodesinblock_visibility);
+    drupal_write_record('nodes_in_block', $nodeinblock);
+  }
+    
+  // Get visibility paths.
+  $visibility = array();
+  $result = db_query("SELECT visibility FROM {nodes_in_block} nib LEFT JOIN {node} n on n.nid = nib.nid WHERE nib.bid = %d AND nib.status > 0 AND n.status = 1", $node->nodesinblock_delta);
+  while ($row = db_fetch_object($result)) {
+    $node_visibility = explode("\n", $row->visibility);
+    foreach ($node_visibility as $path)
+    $visibility[] = trim($path);
+  }
+
+  // Update blocks table.
+  $visibility = array_unique($visibility);
+  db_query("UPDATE {blocks} set visibility = 1, pages = '%s' WHERE module = 'nodesinblock' AND delta = %d", implode("\n", $visibility), $node->nodesinblock_delta);  
+}
+
+/**
+ * Function callback: get content for a block.
+ */
+function _nodesinblock_show($delta) {
+  $output = '';
+  $query = "SELECT nib.nid, visibility FROM {nodes_in_block} nib
+    LEFT JOIN {node} n on n.nid = nib.nid
+    WHERE n.status = 1 AND nib.status > 0 AND bid = %d
+    ORDER BY weight
+  ";
+  $result = db_query($query, $delta);
+  $path = drupal_get_path_alias($_GET['q']);
+  while ($row = db_fetch_object($result)) {
+    $paths = explode("\n", trim($row->visibility));   
+    foreach ($paths as $key => $val) {
+      // Match the path.
+      $page_match = drupal_match_path($path, $val);
+      if ($path != $_GET['q']) {
+        $page_match = $page_match || drupal_match_path($_GET['q'], $val);
+      }
+      $page_match = !(1 xor $page_match);
+
+      // We have a match, load the node.
+      if ($page_match) {
+        $node = node_load($row->nid);
+        $output .= node_view($node, TRUE) .'<hr>';
+      }
+    }
+  }
+  return $output;
+}

@@ -1,0 +1,72 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Nodes in block install file.
+ */
+
+/**
+ * Implementation of hook_install().
+ */
+function nodesinblock_install() {
+  drupal_install_schema('nodesinblock');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function nodesinblock_uninstall() {
+  drupal_uninstall_schema('nodesinblock');
+  db_query("DELETE FROM {variable} WHERE name LIKE 'nodesinblock_%%'");
+  cache_clear_all('variables', 'cache');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function nodesinblock_schema() {
+  $schema['nodes_in_block'] = array(
+    'description' => t('Nodes in block table.'),
+    'fields' => array(
+      'nid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The ID of the node.'),
+      ),
+      'bid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => t('The ID of the block.'),
+      ),
+      'weight' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('The order of the node in the block.'),
+      ),
+      'status' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'size' => 'tiny',
+        'default' => 0,
+        'description' => t('Status of content in block.'),
+      ),
+      'visibility' => array(
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big',
+        'description' => t('Visibility settings.'),
+      ),
+    ),
+    'primary key' => array('nid'),
+    'indexes' => array(
+      'list' => array('nid', 'bid'),
+    ),
+  );
+
+  return $schema;
+}
