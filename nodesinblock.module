@@ -207,7 +207,7 @@ function _nodesinblock_show($delta) {
       if ($page_match) {
         $node = node_load($row->nid);
         $node->nodesinblock = 1;
-        $output .= node_view($node, TRUE) .'<hr>';
+        $output .= '<div class="nodesinblock_'. $node->nid .'">'. node_view($node, TRUE) .'</div>';
       }
     }
   }
