@@ -206,6 +206,7 @@ function _nodesinblock_show($delta) {
       // We have a match, load the node.
       if ($page_match) {
         $node = node_load($row->nid);
+        $node->nodesinblock = 1;
         $output .= node_view($node, TRUE) .'<hr>';
       }
     }
