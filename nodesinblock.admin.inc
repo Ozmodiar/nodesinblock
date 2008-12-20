@@ -56,10 +56,12 @@ function nodesinblock_settings() {
     foreach ($saved_types as $key => $value) {
       if ($value != '0') {
         $form['contenttypes_block']['nodesinblock_'. $key .'_block'] = array(
-          '#type' => 'select',
+          '#type' => 'checkboxes',
           '#title' => t('Block for @key', array('@key' => $key)),
           '#options' => $block_options,
           '#default_value' => variable_get('nodesinblock_'. $key .'_block', array()),
+          '#prefix' => '<div style="float: left; margin-right: 10px;">',
+          '#suffix' => '</div>',
         );
       }
     }
