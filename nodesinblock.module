@@ -4,8 +4,10 @@
 /**
  * @file
  * Nodes in block makes it possible to add multiple nodes in one block.
- * TODO research multiple themes (admin theme vs output theme) rehash blocks on settings page ?
- * TODO multilang
+ *
+ * TODO research apachesolr wipe ?
+ * TODO multilang node support.
+ * TODO fix delta naming, numeric naming isn't good.
  */
 
 /**
@@ -53,6 +55,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
     if (!empty($block_options)) {
 
       $options = array(0 => t('Disabled'), 1 => t('Enabled'));
+      // If core search module is enabled, add extra option to wipe this node from search results.
       if (module_exists('search')) {
         $options[] = t('Enabled and exclude from search index');
       }
