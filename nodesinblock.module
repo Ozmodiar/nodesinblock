@@ -144,9 +144,8 @@ function nodesinblock_block($op = 'list', $delta = 0, $edit = array()) {
  * Implementation of hook_update_index().
  *
  * Remove node from default search index and from apachesolr if this module exists.
- * This is actually not a very cool and sane solution if you are running cron
- * every 5 minutes and have a lot of nodes that should be excluded. Might try and find
- * a better solution one day, however, this is probably due to drupal core's search.
+ * This is actually not a very cool and sane solution if you are running cron,
+ * will implement solution like in http://drupal.org/project/search_block soon.
  */
 function nodesinblock_update_index() {
   $apachesolr = (module_exists('apachesolr')) ? TRUE : FALSE;
