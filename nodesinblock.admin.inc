@@ -43,7 +43,7 @@ function nodesinblock_settings() {
     $form['contenttypes_block'] = array(
       '#type' => 'fieldset',
       '#title' => t('Settings per content type'),
-      '#description' => t('Here you can select the blocks per content type. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed.'),
+      '#description' => t('Define per content type which blocks are available. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed. If you want more meaningfull titles for your block titles, consider using <a href="http://drupal.org/project/stringoverrides">String Overrides</a> to alter the title.'),
     );
 
     // Iterate over selected types

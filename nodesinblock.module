@@ -46,7 +46,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
     $i = 0;
     foreach ($deltas as $key => $value) {
       if ($deltas[$a] != 0)
-      $block_options[$i] = t('Nodes in block !number', array('!number' => $a));
+      $block_options[$i] = t('Nodes in block '. $a);
       $a++;
       $i++;
     }
@@ -122,7 +122,7 @@ function nodesinblock_block($op = 'list', $delta = 0, $edit = array()) {
       $number_of_blocks = variable_get('nodesinblock_nrofblocks', 1);
       for ($i = 0, $a = 1; $i < $number_of_blocks; $i++, $a++) {
         $blocks[$i] = array(
-          'info' => t('Nodes in block !number', array('!number' => $a)),
+          'info' => t('Nodes in block '. $a),
           'weight' => 0,
           'enabled' => 0,
           'region' => 'left',
@@ -135,7 +135,7 @@ function nodesinblock_block($op = 'list', $delta = 0, $edit = array()) {
       $a = $delta;
       $a++;
       $block = array(
-        'subject' => variable_get('nodesinblock_title_'. $delta, t('Nodes in block !number', array('!number' => $a))),
+        'subject' => variable_get('nodesinblock_title_'. $delta, t('Nodes in block '. $a)),
         'content' => _nodesinblock_show($delta)
       );
       return $block;
