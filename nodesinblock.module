@@ -4,9 +4,6 @@
 /**
  * @file
  * Nodes in block makes it possible to add multiple nodes in one block.
- *
- * TODO research apachesolr wipe ?
- * TODO multilang node support.
  */
 
 /**
@@ -145,11 +142,20 @@ function nodesinblock_block($op = 'list', $delta = 0, $edit = array()) {
 
 /**
  * Implementation of hook_update_index().
+ *
+ * Remove node from default search index and from apachesolr if this module exists.
+ * This is actually not a very cool and sane solution if you are running cron
+ * every 5 minutes and have a lot of nodes that should excluded. Might try and find
+ * a better solution one day, however, this is probably due to drupal core's search.
  */
 function nodesinblock_update_index() {
-  $result = db_query("SELECT n.nid FROM {nodes_in_block} nib n INNER JOIN {search_dataset} s on s.sid = nib.nid WHERE status = 2");
+  $apachesolr = (module_exists('apachesolr')) ? TRUE : FALSE;
+  $result = db_query("SELECT nib.nid FROM {nodes_in_block} nib INNER JOIN {search_dataset} s on s.sid = nib.nid WHERE status = 2");
   while ($row = db_fetch_object($result)) {
     search_wipe($row->nid, 'node');
+    if ($apachesolr == TRUE) {
+      apachesolr_delete_node_from_index($row->nid);
+    }
   }
 }
 
