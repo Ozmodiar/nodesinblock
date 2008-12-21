@@ -7,7 +7,6 @@
  *
  * TODO research apachesolr wipe ?
  * TODO multilang node support.
- * TODO fix delta naming, numeric naming isn't good.
  */
 
 /**
@@ -62,7 +61,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
 
       if (!empty($form['nid']['#value']))
       $node_info = db_fetch_array(db_query("SELECT * FROM {nodes_in_block} WHERE nid = %d", $form['nid']['#value']));
-      else $node_info = array('status' => 0, 'weight' => 0, 'visibility' => '', 'bid' => 0);
+      else $node_info = array('status' => 0, 'weight' => 0, 'visibility' => '', 'delta' => 0);
 
       $form['nodesinblock'] = array(
         '#type' => 'fieldset',
@@ -79,7 +78,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         '#type' => 'select',
         '#title' => t('Select region'),
         '#options' => $block_options,
-        '#default_value' => $node_info['bid'],
+        '#default_value' => $node_info['delta'],
       );
       $form['nodesinblock']['nodesinblock_weight'] = array(
         '#type' => 'weight',
@@ -176,7 +175,7 @@ function _nodesinblock_save($node, $op) {
   if ($op != 'delete') {
     $nodeinblock = new stdClass;
     $nodeinblock->nid = $node->nid;
-    $nodeinblock->bid = $node->nodesinblock_delta;
+    $nodeinblock->delta = $node->nodesinblock_delta;
     $nodeinblock->weight = $node->nodesinblock_weight;
     $nodeinblock->status = $node->nodesinblock_enable;
     $nodeinblock->visibility = trim($node->nodesinblock_visibility);
@@ -185,7 +184,7 @@ function _nodesinblock_save($node, $op) {
 
   // Get visibility paths.
   $visibility = array();
-  $result = db_query("SELECT visibility FROM {nodes_in_block} nib LEFT JOIN {node} n on n.nid = nib.nid WHERE nib.bid = %d AND nib.status > 0 AND n.status = 1", $node->nodesinblock_delta);
+  $result = db_query("SELECT visibility FROM {nodes_in_block} nib LEFT JOIN {node} n on n.nid = nib.nid WHERE nib.delta = %d AND nib.status > 0 AND n.status = 1", $node->nodesinblock_delta);
   while ($row = db_fetch_object($result)) {
     $node_visibility = explode("\n", $row->visibility);
     foreach ($node_visibility as $path)
@@ -204,7 +203,7 @@ function _nodesinblock_show($delta) {
   $output = '';
   $query = "SELECT nib.nid, visibility FROM {nodes_in_block} nib
     LEFT JOIN {node} n on n.nid = nib.nid
-    WHERE n.status = 1 AND nib.status > 0 AND bid = %d
+    WHERE n.status = 1 AND nib.status > 0 AND delta = %d
     ORDER BY weight
   ";
   $result = db_query($query, $delta);

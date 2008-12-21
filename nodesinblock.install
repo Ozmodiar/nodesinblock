@@ -35,11 +35,12 @@ function nodesinblock_schema() {
         'not null' => TRUE,
         'description' => t('The ID of the node.'),
       ),
-      'bid' => array(
+      'delta' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The ID of the block.'),
+        'size' => 'tiny',
+        'description' => t('The delta of the block.'),
       ),
       'weight' => array(
         'type' => 'int',
@@ -64,7 +65,7 @@ function nodesinblock_schema() {
     ),
     'primary key' => array('nid'),
     'indexes' => array(
-      'list' => array('nid', 'bid'),
+      'list' => array('nid', 'delta'),
     ),
   );
 
