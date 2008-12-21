@@ -56,14 +56,6 @@ function nodesinblock_schema() {
         'default' => 0,
         'description' => t('Status of content in block.'),
       ),
-      'indexed' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'size' => 'tiny',
-        'default' => 0,
-        'description' => t('Status of this node in the search index.'),
-      ),
       'visibility' => array(
         'type' => 'text',
         'not null' => TRUE,
