@@ -35,7 +35,7 @@ function nodesinblock_menu() {
  */
 function nodesinblock_form_alter(&$form, $form_state, $form_id) {
   $saved_types = variable_get('nodesinblock_contenttypes', array());
-  if (isset($form['#node']) && $form['#node']->type .'_node_form' == $form_id && $saved_types[$form['#node']->type] != '0') {
+  if (isset($form['#node']) && $form['#node']->type .'_node_form' == $form_id && isset($saved_types[$form['#node']->type]) && $saved_types[$form['#node']->type] != '0') {
 
     $deltas = variable_get('nodesinblock_'. $form['#node']->type .'_block', array());
     $block_options = array();
