@@ -6,6 +6,9 @@
  * Nodes in block makes it possible to add multiple nodes in one block.
  */
 
+define('NIB_RENDER_TEASER', '1');
+define('NIB_RENDER_PAGE', '2');
+
 /**
  * Implementation of hook_perm().
  */
@@ -54,7 +57,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
 
       if (!empty($form['nid']['#value']))
       $node_info = db_fetch_array(db_query("SELECT * FROM {nodes_in_block} WHERE nid = %d", $form['nid']['#value']));
-      else $node_info = array('status' => 0, 'weight' => 0, 'visibility' => '', 'delta' => 0);
+      else $node_info = array('status' => 0, 'weight' => 0, 'visibility' => '', 'delta' => 0, 'render' => NIB_RENDER_PAGE);
 
       $form['nodesinblock'] = array(
         '#type' => 'fieldset',
@@ -63,6 +66,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         '#collapsed' => TRUE,
       );
       $form['nodesinblock']['nodesinblock_enable'] = array(
+        '#prefix' => '<div id="nodesinblock_admin">',
         '#type' => 'select',
         '#options' => $options,
         '#default_value' => $node_info['status']
@@ -79,11 +83,18 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         '#delta' => 50,
         '#default_value' => $node_info['weight']
       );
+      $form['nodesinblock']['nodesinblock_render'] = array(
+        '#type' => 'select',
+        '#title' => t('Render node as'),
+        '#options' => array(NIB_RENDER_TEASER => t('Teaser'), NIB_RENDER_PAGE => t('Page')),
+        '#default_value' => $node_info['render']
+      );
       $form['nodesinblock']['nodesinblock_visibility'] = array(
         '#type' => 'textarea',
         '#title' => t('Visibility settings'),
         '#description' => t('Enter one page per line as Drupal paths. The \'*\' character is a wildcard. Example paths are blog for the blog page and blog/* for every personal blog. &lt;front&gt; is the front page.'),
-        '#default_value' => $node_info['visibility']
+        '#default_value' => $node_info['visibility'],
+        '#suffix' => '</div>',
       );
     }
   }
@@ -162,6 +173,7 @@ function _nodesinblock_save($node, $op) {
     $nodeinblock->weight = $node->nodesinblock_weight;
     $nodeinblock->status = $node->nodesinblock_enable;
     $nodeinblock->visibility = trim($node->nodesinblock_visibility);
+    $nodeinblock->render = $node->nodesinblock_render;
     drupal_write_record('nodes_in_block', $nodeinblock);
   }
 
@@ -184,7 +196,7 @@ function _nodesinblock_save($node, $op) {
  */
 function _nodesinblock_show($delta) {
   $output = '';
-  $query = "SELECT nib.nid, visibility FROM {nodes_in_block} nib
+  $query = "SELECT nib.nid, visibility, render FROM {nodes_in_block} nib
     LEFT JOIN {node} n on n.nid = nib.nid
     WHERE n.status = 1 AND nib.status > 0 AND delta = %d
     ORDER BY weight
@@ -205,7 +217,9 @@ function _nodesinblock_show($delta) {
       if ($page_match) {
         $node = node_load($row->nid);
         $node->nodesinblock = 1;
-        $output .= '<div class="nodesinblock_'. $node->nid .'">'. node_view($node, TRUE) .'</div>';
+        $output .= '<div class="nodesinblock_'. $node->nid .'">';
+        $output .= ($row->render == NIB_RENDER_TEASER) ? node_view($node, TRUE) : node_view($node, FALSE, TRUE);
+        $output .= '</div>';
       }
     }
   }

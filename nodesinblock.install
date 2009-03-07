@@ -27,26 +27,26 @@ function nodesinblock_uninstall() {
  */
 function nodesinblock_schema() {
   $schema['nodes_in_block'] = array(
-    'description' => t('Nodes in block table.'),
+    'description' => 'Nodes in block table.',
     'fields' => array(
       'nid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
-        'description' => t('The ID of the node.'),
+        'description' => 'The ID of the node.',
       ),
       'delta' => array(
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'size' => 'tiny',
-        'description' => t('The delta of the block.'),
+        'description' => 'The delta of the block.',
       ),
       'weight' => array(
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
-        'description' => t('The order of the node in the block.'),
+        'description' => 'The order of the node in the block.',
       ),
       'status' => array(
         'type' => 'int',
@@ -54,13 +54,21 @@ function nodesinblock_schema() {
         'not null' => TRUE,
         'size' => 'tiny',
         'default' => 0,
-        'description' => t('Status of content in block.'),
+        'description' => 'Status of content in block.',
       ),
       'visibility' => array(
         'type' => 'text',
         'not null' => TRUE,
         'size' => 'big',
-        'description' => t('Visibility settings.'),
+        'description' => 'Visibility settings.',
+      ),
+      'render' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'size' => 'tiny',
+        'default' => 1,
+        'description' => 'Render type of node in block, teaser or page.',
       ),
     ),
     'primary key' => array('nid'),
@@ -70,4 +78,13 @@ function nodesinblock_schema() {
   );
 
   return $schema;
+}
+
+/**
+ * Update 6001: Add render field to table.
+ */
+function nodesinblock_update_6001() {
+  $ret = array();
+  db_add_field($ret, 'nodes_in_block', 'render', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'size' => 'tiny', 'default' => 0));
+  return $ret;
 }
