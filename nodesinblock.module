@@ -55,9 +55,19 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
 
       $options = array(0 => t('Disabled'), 1 => t('Enabled'));
 
-      if (!empty($form['nid']['#value']))
-      $node_info = db_fetch_array(db_query("SELECT * FROM {nodes_in_block} WHERE nid = %d", $form['nid']['#value']));
-      else $node_info = array('status' => 0, 'weight' => 0, 'visibility' => '', 'delta' => 0, 'render' => NIB_RENDER_PAGE);
+      if (!empty($form_state['values'])) {
+        $node_info['status'] = $form_state['values']['nodesinblock_enable'];
+        $node_info['visibility'] = $form_state['values']['nodesinblock_visibility'];
+        $node_info['weight'] = $form_state['values']['nodesinblock_weight'];
+        $node_info['delta'] = $form_state['values']['nodesinblock_delta'];
+        $node_info['render'] = $form_state['values']['nodesinblock_render'];
+      }
+      elseif (!empty($form['nid']['#value'])) {
+        $node_info = db_fetch_array(db_query("SELECT * FROM {nodes_in_block} WHERE nid = %d", $form['nid']['#value']));
+      }
+      else {
+        $node_info = array('status' => 0, 'weight' => 0, 'visibility' => '', 'delta' => 0, 'render' => NIB_RENDER_PAGE);
+      }
 
       $form['nodesinblock'] = array(
         '#type' => 'fieldset',
