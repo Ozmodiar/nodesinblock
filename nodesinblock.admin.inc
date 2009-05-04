@@ -18,7 +18,7 @@ function nodesinblock_settings() {
   );
   $form['nodesinblock']['nodesinblock_nrofblocks'] = array(
     '#type' => 'select',
-    '#title' => t('Number of blocks'),
+    '#title' => t('Total number of blocks'),
     '#options' => drupal_map_assoc(array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)),
     '#default_value' => variable_get('nodesinblock_nrofblocks', 1),
   );
