@@ -14,7 +14,7 @@ function nodesinblock_settings() {
   $form['nodesinblock'] = array(
     '#type' => 'fieldset',
     '#title' => t('General settings'),
-    '#description' => t('Select number of blocks to create and associate content types which nodes can be used to insert as content in a block. When you change the number, be sure to goto the <a href="@url">block configuration</a> page so the block settings are updated in the database. When at least one content type is selected, another fieldset will become available after clicking the submit button.', array('@url' => url('admin/build/block'))),
+    '#description' => t('Select number of blocks to create and associate content types which nodes can be used to insert as content in a block. When you change the number, be sure to goto the <a href="@url">block configuration</a> page so the block settings are updated in the database. When at least one content type is selected, two fieldsets will become available after clicking the submit button where you can change the names of the block and associate content types per block.', array('@url' => url('admin/build/block'))),
   );
   $form['nodesinblock']['nodesinblock_nrofblocks'] = array(
     '#type' => 'select',
@@ -29,8 +29,24 @@ function nodesinblock_settings() {
     '#default_value' => $saved_types,
   );
 
-  // Associate content type with block(s).
+  // Associate content type with block(s) and generate nice names for the blocks.
   if (!empty($saved_types)) {
+
+    $form['userfriendly_names'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('User friendly names for the blocks'),
+      '#description' => t('Only use alphanumeric characters.'),
+    );
+
+    $a = 1;
+    for ($i = 0; $i < variable_get('nodesinblock_nrofblocks', 1); $i++) {
+      $form['userfriendly_names']['nodesinblock_friendlyname_'. $a] = array(
+        '#type' => 'textfield',
+        '#title' => t('Number ') . $a,
+        '#default_value' => check_plain(variable_get('nodesinblock_friendlyname_'. $a, t('Nodes in block '. $a))),
+      );
+      $a++;
+    }
 
     $blocks = module_invoke('nodesinblock', 'block', 'list');
     $block_options = array();
@@ -43,7 +59,7 @@ function nodesinblock_settings() {
     $form['contenttypes_block'] = array(
       '#type' => 'fieldset',
       '#title' => t('Settings per content type'),
-      '#description' => t('Define per content type which blocks are available. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed. If you want more meaningfull titles for your block titles, consider using <a href="http://drupal.org/project/stringoverrides">String Overrides</a> to alter the title.'),
+      '#description' => t('Define per content type which blocks are available. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed.'),
     );
 
     // Iterate over selected types
