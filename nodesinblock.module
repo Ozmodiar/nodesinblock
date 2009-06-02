@@ -211,7 +211,7 @@ function _nodesinblock_show($delta) {
     WHERE n.status = 1 AND nib.status > 0 AND delta = %d
     ORDER BY weight
   ";
-  $result = db_query($query, $delta);
+  $result = db_query(db_rewrite_sql($query), $delta);
   $path = drupal_get_path_alias($_GET['q']);
   while ($row = db_fetch_object($result)) {
     $paths = explode("\n", trim($row->visibility));
@@ -226,27 +226,6 @@ function _nodesinblock_show($delta) {
       // We have a match, load the node.
       if ($page_match) {
         $node = node_load($row->nid);
-
-        // if the node type is translatable, try to load the node with the appropriate
-        // language from the translation set.
-        if (module_exists('translation') && translation_supported_type($node->type)) {
-          global $language;
-          $translations = translation_node_get_translations($node->tnid);
-          $language_default = language_default();
-
-          if ($translations[$language->language]) {
-            $node = node_load($translations[$language->language]->nid);
-          }
-          elseif ($translations[$language_default->language]) {
-            // if no translation was found, display the default site language translation
-            $node = node_load($translations[$language_default->language]->nid);
-          }
-          else {
-            // otherwise we just use the main node
-            return;
-          }
-        }
-
         $node->nodesinblock = 1;
         $output .= '<div class="nodesinblock_'. $node->nid .'">';
         $output .= ($row->render == NIB_RENDER_TEASER) ? node_view($node, TRUE) : node_view($node, FALSE, TRUE);
