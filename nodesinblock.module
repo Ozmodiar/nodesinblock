@@ -6,8 +6,10 @@
  * Nodes in block makes it possible to add multiple nodes in one block.
  */
 
-define('NIB_RENDER_TEASER', '1');
-define('NIB_RENDER_PAGE', '2');
+define('NIB_RENDER_TEASER_WITH_LINKS', '1');
+define('NIB_RENDER_PAGE_WITH_LINKS', '2');
+define('NIB_RENDER_TEASER_WITHOUT_LINKS', '3');
+define('NIB_RENDER_PAGE_WITHOUT_LINKS', '4');
 
 /**
  * Implementation of hook_perm().
@@ -96,7 +98,12 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
       $form['nodesinblock']['nodesinblock_render'] = array(
         '#type' => 'select',
         '#title' => t('Render node as'),
-        '#options' => array(NIB_RENDER_TEASER => t('Teaser'), NIB_RENDER_PAGE => t('Page')),
+        '#options' => array(
+          NIB_RENDER_TEASER_WITH_LINKS => t('Teaser with links'),
+          NIB_RENDER_TEASER_WITHOUT_LINKS => t('Teaser without links'),
+          NIB_RENDER_PAGE_WITH_LINKS => t('Page with links'),
+          NIB_RENDER_PAGE_WITHOUT_LINKS => t('Page without links')
+        ),
         '#default_value' => $node_info['render']
       );
       $form['nodesinblock']['nodesinblock_visibility'] = array(
@@ -123,6 +130,7 @@ function nodesinblock_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       case 'update':
       case 'delete':
         _nodesinblock_save($node, $op);
+        break;
     }
   }
 }
@@ -228,7 +236,9 @@ function _nodesinblock_show($delta) {
         $node = node_load($row->nid);
         $node->nodesinblock = 1;
         $output .= '<div class="nodesinblock_'. $node->nid .'">';
-        $output .= ($row->render == NIB_RENDER_TEASER) ? node_view($node, TRUE) : node_view($node, FALSE, TRUE);
+        $links = FALSE;
+        if ($row->render == NIB_RENDER_PAGE_WITH_LINKS || $row->render == NIB_RENDER_TEASER_WITH_LINKS) $links = TRUE;
+        $output .= ($row->render == NIB_RENDER_TEASER_WITH_LINKS || NIB_RENDER_TEASER_WITHOUT_LINKS) ? node_view($node, TRUE, FALSE, $links) : node_view($node, FALSE, TRUE, $links);
         $output .= '</div>';
       }
     }
