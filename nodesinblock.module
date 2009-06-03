@@ -25,11 +25,25 @@ function nodesinblock_menu() {
   $items = array();
   $items['admin/settings/nodesinblock'] = array(
     'title' => 'Nodes in block',
-    'description' => 'Configure settings for node in block.',
+    'description' => 'Configure settings for nodes in block.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('nodesinblock_settings'),
     'access arguments' => array('administer nodes in block'),
     'file' => 'nodesinblock.admin.inc',
+  );
+  $items['admin/settings/nodesinblock/default'] = array(
+    'title' => 'Configuration',
+    'description' => 'Configure settings for node in block.',
+    'type' => MENU_DEFAULT_LOCAL_TASK
+  );
+  $items['admin/settings/nodesinblock/queue'] = array(
+    'title' => 'Queue',
+    'description' => 'Nodes in block queue.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('nodesinblock_queue'),
+    'access arguments' => array('administer nodes in block'),
+    'file' => 'nodesinblock.admin.inc',
+    'type' => MENU_LOCAL_TASK,
   );
   return $items;
 }
@@ -68,7 +82,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         $node_info = db_fetch_array(db_query("SELECT * FROM {nodes_in_block} WHERE nid = %d", $form['nid']['#value']));
       }
       else {
-        $node_info = array('status' => 0, 'weight' => 0, 'visibility' => '', 'delta' => 0, 'render' => NIB_RENDER_PAGE);
+        $node_info = array('status' => 0, 'weight' => 0, 'visibility' => '', 'delta' => 0, 'render' => NIB_RENDER_PAGE_WITHOUT_LINKS);
       }
 
       $form['nodesinblock'] = array(
@@ -128,10 +142,12 @@ function nodesinblock_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         break;
       case 'insert':
       case 'update':
-      case 'delete':
         _nodesinblock_save($node, $op);
         break;
     }
+  }
+  if ($op == 'delete' && db_result(db_query("SELECT nid FROM {nodes_in_block} WHERE nid = %d", $node->nid)) != FALSE) {
+    _nodesinblock_save($node, 'delete');
   }
 }
 

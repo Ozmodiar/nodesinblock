@@ -6,6 +6,9 @@
  * Administration page for nodes in block.
  */
 
+/**
+ * Menu callback to configure general settings for nodes in block.
+ */
 function nodesinblock_settings() {
   $form = array();
   $content_types = node_get_types('names');
@@ -78,4 +81,12 @@ function nodesinblock_settings() {
   }
 
   return system_settings_form($form);
+}
+
+/**
+ * Menu callback to look at the queue for nodes in block.
+ */
+function nodesinblock_queue($form_state, $block = NULL) {
+  $form = array();
+  return $form;
 }
