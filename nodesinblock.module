@@ -19,6 +19,17 @@ function nodesinblock_perm() {
 }
 
 /**
+ * Implementation of hook_theme().
+ */
+function nodesinblock_theme() {
+  return array(
+    'nodesinblock_queue' => array(
+      'arguments' => array('form' => NULL),
+    ),
+  );
+}
+
+/**
  * Implementation of hook_menu().
  */
 function nodesinblock_menu() {
@@ -31,7 +42,7 @@ function nodesinblock_menu() {
     'access arguments' => array('administer nodes in block'),
     'file' => 'nodesinblock.admin.inc',
   );
-  $items['admin/settings/nodesinblock/default'] = array(
+  /*$items['admin/settings/nodesinblock/default'] = array(
     'title' => 'Configuration',
     'description' => 'Configure settings for node in block.',
     'type' => MENU_DEFAULT_LOCAL_TASK
@@ -44,7 +55,7 @@ function nodesinblock_menu() {
     'access arguments' => array('administer nodes in block'),
     'file' => 'nodesinblock.admin.inc',
     'type' => MENU_LOCAL_TASK,
-  );
+  );*/
   return $items;
 }
 
@@ -192,6 +203,25 @@ function _nodesinblock_validate($node) {
 }
 
 /**
+ * Helper function to return the status.
+ *
+ * @param integer $status The current status of a node.
+ * @param boolean $return Whether to return the complete array or a string.
+ * @return string or array Complete array or Human name of render status.
+ */
+function _nodesinblock_render_status($status, $return = FALSE) {
+  $render_states = array(
+    NIB_RENDER_TEASER_WITH_LINKS => t('Teaser with links'),
+    NIB_RENDER_TEASER_WITHOUT_LINKS => t('Teaser without links'),
+    NIB_RENDER_PAGE_WITH_LINKS => t('Page with links'),
+    NIB_RENDER_PAGE_WITHOUT_LINKS => t('Page without links')
+  );
+
+  if ($return == TRUE) return $render_states[$status];
+  else return $render_states;
+}
+
+/**
  * Function callback: save node settings into nodesinblock table and update block visibility pages.
  */
 function _nodesinblock_save($node, $op) {
@@ -213,7 +243,7 @@ function _nodesinblock_save($node, $op) {
 
   // Get visibility paths.
   $visibility = array();
-  $result = db_query("SELECT visibility FROM {nodes_in_block} nib LEFT JOIN {node} n on n.nid = nib.nid WHERE nib.delta = %d AND nib.status > 0 AND n.status = 1", $node->nodesinblock_delta);
+  $result = db_query("SELECT visibility FROM {nodes_in_block} nib INNER JOIN {node} n on n.nid = nib.nid WHERE nib.delta = %d AND nib.status > 0 AND n.status = 1", $node->nodesinblock_delta);
   while ($row = db_fetch_object($result)) {
     $node_visibility = explode("\n", $row->visibility);
     foreach ($node_visibility as $path)
