@@ -96,17 +96,34 @@ function nodesinblock_queue($form_state, $block = NULL, $links = TRUE) {
   $number_of_blocks = variable_get('nodesinblock_nrofblocks', 1);
   if ($block == NULL) $block = 0;
 
-  // Create blocklinks.
+  // Blocklinks.
+  $blocklinks = array();
   for ($i = 0, $a = 1; $i < $number_of_blocks; $i++, $a++) {
     $title = check_plain(variable_get('nodesinblock_friendlyname_'. $a, t('Nodes in block '. $a)));
     $delta = ($i != '0') ? '/'. $i : '';
-    $link[] = array('href' => 'admin/settings/nodesinblock/queue'. $delta, 'title' => $title);
+    $blocklinks[] = array(
+    	'title' => $title,
+    	'href' => 'admin/settings/nodesinblock/queue'. $delta
+    );
   }
   if ($links == TRUE) {
-    $form['blocklinks'] = array('#type' => 'item', '#value' => theme('links', $link));
+    $form['blocklinks'] = array('#type' => 'item', '#value' => theme('links', $blocklinks));
   }
 
-  // TODO Create content type create links.
+  // Content create links.
+  $createlinks = array();
+  $saved_delta = $block + 1;
+  $saved_types = variable_get('nodesinblock_contenttypes', array());
+  foreach ($saved_types as $type) {
+    $deltas = variable_get('nodesinblock_'. $type .'_block', array());
+    if (isset($deltas[$saved_delta]) && $deltas[$saved_delta] != 0) {
+      $createlinks[] = array(
+      	'title' => t('Create new @type', array('@type' => $type)),
+      	'href' => 'node/add/'. $type,
+      );
+    }
+  }
+  $form['createlinks'] = array('#type' => 'item', '#value' => theme('links', $createlinks));
 
   // Get nodes and store them in #nodes key.
   $query = "SELECT n.nid, n.title, n.status as node_status, nib.status as nodesinblock_status,
@@ -181,7 +198,6 @@ function theme_nodesinblock_queue($form) {
     $row[] = drupal_render($element['node_render']);
     $row[] = drupal_render($element['visibility']);
     $row[] = drupal_render($element['weight']);
-    // TODO add destination.
     $row[] = l(t('View'), 'node/'. $nid) .' - '. l(t('Edit'), 'node/'. $nid .'/edit', array('query' => drupal_get_destination()));
 
     $row = array_merge(array('data' => $row), array());
@@ -204,12 +220,14 @@ function theme_nodesinblock_queue($form) {
     );
     if (isset($form['blocklinks']))
     $output .= drupal_render($form['blocklinks']);
+    $output .= drupal_render($form['createlinks']);
     $output .= theme('table', $header, $rows, array('id' => 'nodesinblock'));
     $output .= drupal_render($form);
   }
   else {
     if (isset($form['blocklinks']))
     $output .= drupal_render($form['blocklinks']);
+    $output .= drupal_render($form['createlinks']);
     $output .= t('No nodes found.');
   }
 
