@@ -100,7 +100,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         '#type' => 'fieldset',
         '#title' => t('Nodes in block'),
         '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
+        '#collapsed' => variable_get('nodesinblock_'. $form['#node']->type .'_collapsed', TRUE),
       );
       $form['nodesinblock']['nodesinblock_enable'] = array(
         '#prefix' => '<div id="nodesinblock_admin">',

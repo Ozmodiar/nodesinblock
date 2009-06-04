@@ -62,7 +62,7 @@ function nodesinblock_settings() {
     $form['contenttypes_block'] = array(
       '#type' => 'fieldset',
       '#title' => t('Settings per content type'),
-      '#description' => t('Define per content type which blocks are available. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed.'),
+      '#description' => t('Define per content type which blocks are available. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed. The "Collapsed fieldset" checkbox let\'s you choose if the fieldset on the node form is collapsed or not.'),
     );
 
     // Iterate over selected types
@@ -74,6 +74,11 @@ function nodesinblock_settings() {
           '#options' => $block_options,
           '#default_value' => variable_get('nodesinblock_'. $key .'_block', array()),
           '#prefix' => '<div style="float: left; margin-right: 10px;">',
+        );
+        $form['contenttypes_block']['nodesinblock_'. $key .'_collapsed'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Collapsed fieldset'),
+          '#default_value' => variable_get('nodesinblock_'. $key .'_collapsed', TRUE),
           '#suffix' => '</div>',
         );
       }
