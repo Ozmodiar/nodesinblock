@@ -42,7 +42,7 @@ function nodesinblock_menu() {
     'access arguments' => array('administer nodes in block'),
     'file' => 'nodesinblock.admin.inc',
   );
-  /*$items['admin/settings/nodesinblock/default'] = array(
+  $items['admin/settings/nodesinblock/default'] = array(
     'title' => 'Configuration',
     'description' => 'Configure settings for node in block.',
     'type' => MENU_DEFAULT_LOCAL_TASK
@@ -55,7 +55,7 @@ function nodesinblock_menu() {
     'access arguments' => array('administer nodes in block'),
     'file' => 'nodesinblock.admin.inc',
     'type' => MENU_LOCAL_TASK,
-  );*/
+  );
   return $items;
 }
 

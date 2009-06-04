@@ -87,59 +87,68 @@ function nodesinblock_settings() {
  * Menu callback to look at the queue for nodes in block.
  *
  * @param integer $block The delta of the block.
- * @param integer $links Whether to render the links or not.
+ * @param integer $links Whether to render the blocklinks or not.
  */
 function nodesinblock_queue($form_state, $block = NULL, $links = TRUE) {
   $form = array();
+  $form['nodes'] = array('#tree' => TRUE);
 
   $number_of_blocks = variable_get('nodesinblock_nrofblocks', 1);
   if ($block == NULL) $block = 0;
 
-  // Render links
+  // Create blocklinks.
   for ($i = 0, $a = 1; $i < $number_of_blocks; $i++, $a++) {
     $title = check_plain(variable_get('nodesinblock_friendlyname_'. $a, t('Nodes in block '. $a)));
     $link[] = array('href' => 'admin/settings/nodesinblock/queue/'. $i, 'title' => $title);
   }
   if ($links == TRUE) {
-    $form['links'] = array('#type' => 'item', '#value' => theme('links', $link));
+    $form['blocklinks'] = array('#type' => 'item', '#value' => theme('links', $link));
   }
+
+  // TODO Create content type create links.
 
   // Get nodes and store them in #nodes key.
   $query = "SELECT n.nid, n.title, n.status as node_status, nib.status as nodesinblock_status,
   					nib.weight, nib.render, nib.visibility FROM {nodes_in_block} nib INNER JOIN {node} n
-  					on n.nid = nib.nid WHERE nib.delta = %d";
+  					on n.nid = nib.nid WHERE nib.delta = %d ORDER BY weight ASC";
   $nodes = db_query($query, $block);
   while ($row = db_fetch_object($nodes)) {
-    $form[$node->nid]['title'] = array(
+    $form['nodes'][$row->nid]['nid'] = array(
+      '#type' => 'value',
+      '#value' => $row->nid,
+    );
+    $form['nodes'][$row->nid]['title'] = array(
       '#type' => 'item',
       '#value' => $row->title,
     );
-    $form[$node->nid]['node_status'] = array(
+    $form['nodes'][$row->nid]['node_status'] = array(
       '#type' => 'item',
       '#value' => ($row->node_status == 1) ? t('published') : t('unpublished'),
     );
-    $form[$node->nid]['block_status'] = array(
+    $form['nodes'][$row->nid]['block_status'] = array(
       '#type' => 'item',
       '#value' => ($row->nodesinblock_status == 1) ? t('enabled') : t('disabled'),
     );
-    $form[$node->nid]['node_render'] = array(
+    $form['nodes'][$row->nid]['node_render'] = array(
       '#type' => 'item',
       '#value' => _nodesinblock_render_status($row->render, TRUE),
     );
-    $form[$node->nid]['visibility'] = array(
+    $form['nodes'][$row->nid]['visibility'] = array(
       '#type' => 'item',
       '#value' => $row->visibility,
     );
-    $form[$node->nid]['weight'] = array(
+    $form['nodes'][$row->nid]['weight'] = array(
       '#type' => 'weight',
       '#default_value' => $row->weight,
       '#delta' => 30,
     );
   }
 
+  // Block delta
+  $form['delta'] = array('#type' => 'value', '#value' => $block);
+
   // Save button.
   $form['submit'] = array('#type' => 'submit', '#value' => t('Save'));
-
   return $form;
 }
 
@@ -147,7 +156,9 @@ function nodesinblock_queue($form_state, $block = NULL, $links = TRUE) {
  * Submit callback, save weights after queue submit.
  */
 function nodesinblock_queue_submit($form, &$form_state) {
-  dsm('SUBMITTING');
+  foreach ($form_state['values']['nodes'] as $node) {
+    db_query("UPDATE {nodes_in_block} set weight = %d WHERE delta = %d AND nid = %d", $node['weight'], $form_state['values']['delta'], $node['nid']);
+  }
 }
 
 /**
@@ -157,38 +168,47 @@ function theme_nodesinblock_queue($form) {
   $output = '';
 
   $rows = array();
-  foreach (element_children($form) as $nid) {
-    if (isset($form[$nid]['node_render'])) {
-      $element = &$form[$nid];
+  foreach (element_children($form['nodes']) as $nid) {
+    $element = &$form['nodes'][$nid];
 
-      $row = array();
-      $row[] = drupal_render($element['title']);
-      $row[] = drupal_render($element['node_status']);
-      $row[] = drupal_render($element['block_status']);
-      $row[] = drupal_render($element['node_render']);
-      $row[] = drupal_render($element['visibility']);
-      $row[] = drupal_render($element['weight']);
+    $element['weight']['#attributes']['class'] = 'nodes-weight';
 
-      $row['class'] = !empty($row['class']) ? $row['class'] .' draggable' : 'draggable';
+    $row = array();
+    $row[] = drupal_render($element['title']);
+    $row[] = drupal_render($element['node_status']);
+    $row[] = drupal_render($element['block_status']);
+    $row[] = drupal_render($element['node_render']);
+    $row[] = drupal_render($element['visibility']);
+    $row[] = drupal_render($element['weight']);
+    // TODO add destination.
+    $row[] = l(t('View'), 'node/'. $nid) .' - '. l(t('Edit'), 'node/'. $nid .'/edit', array('query' => drupal_get_destination()));
 
-      $rows[] = $row;
-    }
+    $row = array_merge(array('data' => $row), array());
+    $row['class'] = !empty($row['class']) ? $row['class'] .' draggable' : 'draggable';
+    $rows[] = $row;
   }
 
   if ($rows) {
+
+    drupal_add_tabledrag('nodesinblock', 'order', 'sibling', 'nodes-weight');
+
     $header = array(
       t('Title'),
       t('Node status'),
       t('Block status'),
       t('Render mode'),
       t('Visibility'),
-      t('Weight')
+      t('Weight'),
+      t('Operations'),
     );
+    if (isset($form['blocklinks']))
+    $output .= drupal_render($form['blocklinks']);
     $output .= theme('table', $header, $rows, array('id' => 'nodesinblock'));
     $output .= drupal_render($form);
   }
   else {
-    $output .= drupal_render($form['links']);
+    if (isset($form['blocklinks']))
+    $output .= drupal_render($form['blocklinks']);
     $output .= t('No nodes found.');
   }
 
