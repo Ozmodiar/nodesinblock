@@ -99,7 +99,8 @@ function nodesinblock_queue($form_state, $block = NULL, $links = TRUE) {
   // Create blocklinks.
   for ($i = 0, $a = 1; $i < $number_of_blocks; $i++, $a++) {
     $title = check_plain(variable_get('nodesinblock_friendlyname_'. $a, t('Nodes in block '. $a)));
-    $link[] = array('href' => 'admin/settings/nodesinblock/queue/'. $i, 'title' => $title);
+    $delta = ($i != '0') ? '/'. $i : '';
+    $link[] = array('href' => 'admin/settings/nodesinblock/queue'. $delta, 'title' => $title);
   }
   if ($links == TRUE) {
     $form['blocklinks'] = array('#type' => 'item', '#value' => theme('links', $link));

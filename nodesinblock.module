@@ -193,6 +193,25 @@ function nodesinblock_block($op = 'list', $delta = 0, $edit = array()) {
 }
 
 /**
+ * Implementation of hook_link().
+ */
+function nodesinblock_link($type, $object, $teaser = FALSE) {
+  $links = array();
+  $saved_types = variable_get('nodesinblock_contenttypes', array());
+  if ($type == 'node' && !$teaser && user_access('administer nodes in block') &&
+      isset($saved_types[$object->type]) && $saved_types[$object->type] != '0') {
+    $delta = db_result(db_query("SELECT delta FROM {nodes_in_block} WHERE nid = %d", $object->nid));
+    $delta = ($delta != '0') ? '/'. $delta : '';
+    $links['nodesinblock_queue'] = array(
+      'title' => t('Manage nodes in block queue'),
+      'href' => 'admin/settings/nodesinblock/queue'. $delta
+    );
+  }
+  return $links;
+}
+//array('administer nodes in block')
+
+/**
  * Function callback: validate node. Returns error if visibility is empty and status is enabled.
  */
 function _nodesinblock_validate($node) {
