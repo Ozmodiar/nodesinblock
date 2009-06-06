@@ -17,7 +17,7 @@ function nodesinblock_settings() {
   $form['nodesinblock'] = array(
     '#type' => 'fieldset',
     '#title' => t('General settings'),
-    '#description' => t('Select number of blocks to create and associate content types which nodes can be used to insert as content in a block. When you change the number, be sure to goto the <a href="@url">block configuration</a> page so the block settings are updated in the database. When at least one content type is selected, two fieldsets will become available after clicking the submit button where you can change the names of the block and associate content types per block.', array('@url' => url('admin/build/block'))),
+    '#description' => t('Select number of blocks to create and associate content types which nodes can be used to insert as content in a block. When you change the number, be sure to goto the <a href="@url">block configuration</a> page so the block settings are updated in the database. When at least one content type is selected, two fieldsets will become available after clicking the submit button where you can change general settings and associate content types per block.', array('@url' => url('admin/build/block'))),
   );
   $form['nodesinblock']['nodesinblock_nrofblocks'] = array(
     '#type' => 'select',
@@ -35,20 +35,27 @@ function nodesinblock_settings() {
   // Associate content type with block(s) and generate nice names for the blocks.
   if (!empty($saved_types)) {
 
-    $form['userfriendly_names'] = array(
+    $form['general_settings'] = array(
       '#type' => 'fieldset',
-      '#title' => t('User friendly names for the blocks'),
-      '#description' => t('Only use alphanumeric characters.'),
+      '#title' => t('General settings per block'),
     );
 
-    $a = 1;
-    for ($i = 0; $i < variable_get('nodesinblock_nrofblocks', 1); $i++) {
-      $form['userfriendly_names']['nodesinblock_friendlyname_'. $a] = array(
+    for ($i = 0, $a = 1; $i < variable_get('nodesinblock_nrofblocks', 1); $i++, $a++) {
+      $form['general_settings']['nodesinblock_friendlyname_'. $i] = array(
         '#type' => 'textfield',
-        '#title' => t('Number ') . $a,
-        '#default_value' => check_plain(variable_get('nodesinblock_friendlyname_'. $a, t('Nodes in block '. $a))),
+        '#title' => t('User friendly name for block') .' '. $a,
+        '#default_value' => check_plain(variable_get('nodesinblock_friendlyname_'. $i, t('Nodes in block '. $a))),
+      	'#description' => t('Only use alphanumeric characters.'),
       );
-      $a++;
+      $form['general_settings']['nodesinblock_visibility_'. $i] = array(
+        '#type' => 'select',
+        '#title' => t('Visibility settings for block') .' '. $a,
+        '#options' => array(
+          t('Show on every page except the listed pages.'),
+          t('Show on only the listed pages.')
+        ),
+        '#default_value' => variable_get('nodesinblock_visibility_'. $i, '1'),
+      );
     }
 
     $blocks = module_invoke('nodesinblock', 'block', 'list');
@@ -158,7 +165,7 @@ function nodesinblock_queue($form_state, $block = NULL, $links = TRUE) {
     );
     $form['nodes'][$row->nid]['visibility'] = array(
       '#type' => 'item',
-      '#value' => $row->visibility,
+      '#value' => htmlentities($row->visibility),
     );
     $form['nodes'][$row->nid]['weight'] = array(
       '#type' => 'weight',
