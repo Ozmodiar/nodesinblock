@@ -67,10 +67,10 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
   $saved_types = variable_get('nodesinblock_contenttypes', array());
   if (isset($form['#node']) && $form['#node']->type .'_node_form' == $form_id && isset($saved_types[$form['#node']->type]) && $saved_types[$form['#node']->type] != '0') {
 
-    $deltas = variable_get('nodesinblock_'. $form['#node']->type .'_block', array());
-    $block_options = array();
     $a = 1;
     $i = 0;
+    $block_options = array();
+    $deltas = variable_get('nodesinblock_'. $form['#node']->type .'_block', array());
     foreach ($deltas as $key => $value) {
       if ($deltas[$a] != 0)
       $block_options[$i] = check_plain(variable_get('nodesinblock_friendlyname_'. $i, t('Nodes in block '. $a)));
@@ -93,32 +93,29 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         $node_info = db_fetch_array(db_query("SELECT * FROM {nodes_in_block} WHERE nid = %d", $form['nid']['#value']));
       }
       else {
-        $node_info = array('status' => 0, 'weight' => 0, 'visibility' => '', 'delta' => 0, 'render' => NIB_RENDER_PAGE_WITHOUT_LINKS);
+        $node_info = array('status' => 1, 'weight' => 0, 'visibility' => '', 'delta' => 0, 'render' => NIB_RENDER_PAGE_WITHOUT_LINKS);
       }
 
       $form['nodesinblock'] = array(
         '#type' => 'fieldset',
-        '#title' => t('Nodes in block'),
+        '#title' => check_plain(variable_get('nodesinblock_'. $form['#node']->type .'_label', t('Nodes in block'))),
         '#collapsible' => TRUE,
         '#collapsed' => variable_get('nodesinblock_'. $form['#node']->type .'_collapsed', TRUE),
       );
       $form['nodesinblock']['nodesinblock_enable'] = array(
-        '#prefix' => '<div id="nodesinblock_admin">',
-        '#type' => 'select',
-        '#options' => $options,
-        '#default_value' => $node_info['status']
+        '#type' => 'value',
+        '#value' => $node_info['status']
       );
       $form['nodesinblock']['nodesinblock_delta'] = array(
-        '#type' => 'select',
+        '#prefix' => '<div id="nodesinblock_admin">',
+      	'#type' => 'select',
         '#title' => t('Select region'),
         '#options' => $block_options,
         '#default_value' => $node_info['delta'],
       );
       $form['nodesinblock']['nodesinblock_weight'] = array(
-        '#type' => 'weight',
-        '#title' => t('Weight'),
-        '#delta' => 50,
-        '#default_value' => $node_info['weight']
+        '#type' => 'value',
+        '#value' => $node_info['weight']
       );
       $form['nodesinblock']['nodesinblock_render'] = array(
         '#type' => 'select',
@@ -207,7 +204,6 @@ function nodesinblock_link($type, $object, $teaser = FALSE) {
   }
   return $links;
 }
-//array('administer nodes in block')
 
 /**
  * Function callback: validate node. Returns error if visibility is empty and status is enabled.

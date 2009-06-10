@@ -69,7 +69,7 @@ function nodesinblock_settings() {
     $form['contenttypes_block'] = array(
       '#type' => 'fieldset',
       '#title' => t('Settings per content type'),
-      '#description' => t('Define per content type which blocks are available. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed. The "Collapsed fieldset" checkbox let\'s you choose if the fieldset on the node form is collapsed or not.'),
+      '#description' => t('Define per content type which blocks are available. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed. You can also choose the label of the fieldset and the "Collapsed fieldset" checkbox let\'s you choose if the fieldset on the node form is collapsed or not.'),
     );
 
     // Iterate over selected types
@@ -81,6 +81,13 @@ function nodesinblock_settings() {
           '#options' => $block_options,
           '#default_value' => variable_get('nodesinblock_'. $key .'_block', array()),
           '#prefix' => '<div style="float: left; margin-right: 10px;">',
+        );
+
+        $form['contenttypes_block']['nodesinblock_'. $key .'_label'] = array(
+          '#type' => 'textfield',
+          '#title' => t('Fieldset label'),
+          '#default_value' => check_plain(variable_get('nodesinblock_'. $key .'_label', t('Nodes in block'))),
+          '#size' => 20,
         );
         $form['contenttypes_block']['nodesinblock_'. $key .'_collapsed'] = array(
           '#type' => 'checkbox',
@@ -111,7 +118,7 @@ function nodesinblock_queue($form_state, $block = NULL, $links = TRUE) {
   // Blocklinks.
   $blocklinks = array();
   for ($i = 0, $a = 1; $i < $number_of_blocks; $i++, $a++) {
-    $title = check_plain(variable_get('nodesinblock_friendlyname_'. $a, t('Nodes in block '. $a)));
+    $title = check_plain(variable_get('nodesinblock_friendlyname_'. $i, t('Nodes in block '. $a)));
     $delta = ($i != '0') ? '/'. $i : '';
     $blocklinks[] = array(
     	'title' => $title,
@@ -156,8 +163,8 @@ function nodesinblock_queue($form_state, $block = NULL, $links = TRUE) {
       '#value' => ($row->node_status == 1) ? t('published') : t('unpublished'),
     );
     $form['nodes'][$row->nid]['block_status'] = array(
-      '#type' => 'item',
-      '#value' => ($row->nodesinblock_status == 1) ? t('enabled') : t('disabled'),
+      '#type' => 'checkbox',
+      '#default_value' => $row->nodesinblock_status,
     );
     $form['nodes'][$row->nid]['node_render'] = array(
       '#type' => 'item',
@@ -187,7 +194,7 @@ function nodesinblock_queue($form_state, $block = NULL, $links = TRUE) {
  */
 function nodesinblock_queue_submit($form, &$form_state) {
   foreach ($form_state['values']['nodes'] as $node) {
-    db_query("UPDATE {nodes_in_block} set weight = %d WHERE delta = %d AND nid = %d", $node['weight'], $form_state['values']['delta'], $node['nid']);
+    db_query("UPDATE {nodes_in_block} set weight = %d, status = %d WHERE delta = %d AND nid = %d", $node['weight'], $node['block_status'], $form_state['values']['delta'], $node['nid']);
   }
 }
 
@@ -204,9 +211,9 @@ function theme_nodesinblock_queue($form) {
     $element['weight']['#attributes']['class'] = 'nodes-weight';
 
     $row = array();
+    $row[] = drupal_render($element['block_status']);
     $row[] = drupal_render($element['title']);
     $row[] = drupal_render($element['node_status']);
-    $row[] = drupal_render($element['block_status']);
     $row[] = drupal_render($element['node_render']);
     $row[] = drupal_render($element['visibility']);
     $row[] = drupal_render($element['weight']);
@@ -222,9 +229,9 @@ function theme_nodesinblock_queue($form) {
     drupal_add_tabledrag('nodesinblock', 'order', 'sibling', 'nodes-weight');
 
     $header = array(
+      t('Block status'),
       t('Title'),
       t('Node status'),
-      t('Block status'),
       t('Render mode'),
       t('Visibility'),
       t('Weight'),
