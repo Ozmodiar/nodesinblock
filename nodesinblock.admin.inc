@@ -32,12 +32,12 @@ function nodesinblock_settings() {
     '#default_value' => $saved_types,
   );
 
-  // Associate content type with block(s) and generate nice names for the blocks.
+  // Settings per block & content type.
   if (!empty($saved_types)) {
 
     $form['general_settings'] = array(
       '#type' => 'fieldset',
-      '#title' => t('General settings per block'),
+      '#title' => t('GSettings per block'),
     );
 
     for ($i = 0, $a = 1; $i < variable_get('nodesinblock_nrofblocks', 1); $i++, $a++) {
@@ -69,7 +69,7 @@ function nodesinblock_settings() {
     $form['contenttypes_block'] = array(
       '#type' => 'fieldset',
       '#title' => t('Settings per content type'),
-      '#description' => t('Define per content type which blocks are available. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed. You can also choose the label of the fieldset and the "Collapsed fieldset" checkbox let\'s you choose if the fieldset on the node form is collapsed or not.'),
+      '#description' => t('Define per content type which blocks are available. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed. You can also choose the label of the fieldset and the "Collapsed fieldset" checkbox let\'s you choose if the fieldset on the node form is collapsed or not. Finally, you can set a default render mode for the node. If you choose one, the select box on the node form will be hidden.'),
     );
 
     // Iterate over selected types
@@ -93,6 +93,14 @@ function nodesinblock_settings() {
           '#type' => 'checkbox',
           '#title' => t('Collapsed fieldset'),
           '#default_value' => variable_get('nodesinblock_'. $key .'_collapsed', TRUE),
+        );
+        $options = array(0 => t('Let the user decide'));
+        $options += _nodesinblock_render_status(0);
+        $form['contenttypes_block']['nodesinblock_'. $key .'_render'] = array(
+          '#type' => 'select',
+          '#title' => t('Render mode'),
+          '#default_value' => variable_get('nodesinblock_'. $key .'_render', 0),
+          '#options' => $options,
           '#suffix' => '</div>',
         );
       }

@@ -93,7 +93,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         $node_info = db_fetch_array(db_query("SELECT * FROM {nodes_in_block} WHERE nid = %d", $form['nid']['#value']));
       }
       else {
-        $node_info = array('status' => 1, 'weight' => 0, 'visibility' => '', 'delta' => 0, 'render' => NIB_RENDER_PAGE_WITHOUT_LINKS);
+        $node_info = array('status' => 1, 'weight' => 0, 'visibility' => '*', 'delta' => 0, 'render' => NIB_RENDER_PAGE_WITHOUT_LINKS);
       }
 
       $form['nodesinblock'] = array(
@@ -128,6 +128,10 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         ),
         '#default_value' => $node_info['render']
       );
+      if (variable_get('nodesinblock_'. $form['#node']->type .'_render', 0) != 0) {
+        $form['nodesinblock']['nodesinblock_render']['#type'] = 'value';
+        $form['nodesinblock']['nodesinblock_render']['#value'] = variable_get('nodesinblock_'. $form['#node']->type .'_render', 0);
+      }
       $form['nodesinblock']['nodesinblock_visibility'] = array(
         '#type' => 'textarea',
         '#title' => t('Visibility settings'),
