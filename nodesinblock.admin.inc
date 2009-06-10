@@ -37,7 +37,7 @@ function nodesinblock_settings() {
 
     $form['general_settings'] = array(
       '#type' => 'fieldset',
-      '#title' => t('GSettings per block'),
+      '#title' => t('Settings per block'),
     );
 
     for ($i = 0, $a = 1; $i < variable_get('nodesinblock_nrofblocks', 1); $i++, $a++) {
@@ -69,7 +69,7 @@ function nodesinblock_settings() {
     $form['contenttypes_block'] = array(
       '#type' => 'fieldset',
       '#title' => t('Settings per content type'),
-      '#description' => t('Define per content type which blocks are available. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed. You can also choose the label of the fieldset and the "Collapsed fieldset" checkbox let\'s you choose if the fieldset on the node form is collapsed or not. Finally, you can set a default render mode for the node. If you choose one, the select box on the node form will be hidden.'),
+      '#description' => t('Define per content type which blocks are available. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed. You can also choose the label of the fieldset and if it is collapsible and/or collapsed by default. Finally, you can set a default render mode for the node. If you choose one, the select box on the node form will be hidden.'),
     );
 
     // Iterate over selected types
@@ -77,10 +77,10 @@ function nodesinblock_settings() {
       if ($value != '0') {
         $form['contenttypes_block']['nodesinblock_'. $key .'_block'] = array(
           '#type' => 'checkboxes',
-          '#title' => t('Blocks for @key', array('@key' => $key)),
+          '#title' => t('Blocks'),
           '#options' => $block_options,
           '#default_value' => variable_get('nodesinblock_'. $key .'_block', array()),
-          '#prefix' => '<div style="float: left; margin-right: 10px;">',
+          '#prefix' => '<div style="float: left; padding:5px; margin-right: 10px; border: 1px solid #cccccc;"> <strong>'.t('Configure @key', array('@key' => $key)) .'</strong>',
         );
 
         $form['contenttypes_block']['nodesinblock_'. $key .'_label'] = array(
@@ -93,6 +93,11 @@ function nodesinblock_settings() {
           '#type' => 'checkbox',
           '#title' => t('Collapsed fieldset'),
           '#default_value' => variable_get('nodesinblock_'. $key .'_collapsed', TRUE),
+        );
+        $form['contenttypes_block']['nodesinblock_'. $key .'_collapsible'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Collapsible fieldset'),
+          '#default_value' => variable_get('nodesinblock_'. $key .'_collapsible', TRUE),
         );
         $options = array(0 => t('Let the user decide'));
         $options += _nodesinblock_render_status(0);
@@ -154,7 +159,7 @@ function nodesinblock_queue($form_state, $block = NULL, $links = TRUE) {
 
   // Get nodes and store them in #nodes key.
   $query = "SELECT n.nid, n.title, n.status as node_status, nib.status as nodesinblock_status,
-  					nib.weight, nib.render, nib.visibility FROM {nodes_in_block} nib INNER JOIN {node} n
+  					nib.weight, nib.visibility FROM {nodesinblock} nib INNER JOIN {node} n
   					on n.nid = nib.nid WHERE nib.delta = %d ORDER BY weight ASC";
   $nodes = db_query($query, $block);
   while ($row = db_fetch_object($nodes)) {
@@ -173,10 +178,6 @@ function nodesinblock_queue($form_state, $block = NULL, $links = TRUE) {
     $form['nodes'][$row->nid]['block_status'] = array(
       '#type' => 'checkbox',
       '#default_value' => $row->nodesinblock_status,
-    );
-    $form['nodes'][$row->nid]['node_render'] = array(
-      '#type' => 'item',
-      '#value' => _nodesinblock_render_status($row->render, TRUE),
     );
     $form['nodes'][$row->nid]['visibility'] = array(
       '#type' => 'item',
@@ -202,7 +203,7 @@ function nodesinblock_queue($form_state, $block = NULL, $links = TRUE) {
  */
 function nodesinblock_queue_submit($form, &$form_state) {
   foreach ($form_state['values']['nodes'] as $node) {
-    db_query("UPDATE {nodes_in_block} set weight = %d, status = %d WHERE delta = %d AND nid = %d", $node['weight'], $node['block_status'], $form_state['values']['delta'], $node['nid']);
+    db_query("UPDATE {nodesinblock} set weight = %d, status = %d WHERE delta = %d AND nid = %d", $node['weight'], $node['block_status'], $form_state['values']['delta'], $node['nid']);
   }
 }
 
@@ -222,7 +223,6 @@ function theme_nodesinblock_queue($form) {
     $row[] = drupal_render($element['block_status']);
     $row[] = drupal_render($element['title']);
     $row[] = drupal_render($element['node_status']);
-    $row[] = drupal_render($element['node_render']);
     $row[] = drupal_render($element['visibility']);
     $row[] = drupal_render($element['weight']);
     $row[] = l(t('View'), 'node/'. $nid) .' - '. l(t('Edit'), 'node/'. $nid .'/edit', array('query' => drupal_get_destination()));
@@ -240,7 +240,6 @@ function theme_nodesinblock_queue($form) {
       t('Block status'),
       t('Title'),
       t('Node status'),
-      t('Render mode'),
       t('Visibility'),
       t('Weight'),
       t('Operations'),

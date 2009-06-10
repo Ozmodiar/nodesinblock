@@ -26,7 +26,7 @@ function nodesinblock_uninstall() {
  * Implementation of hook_schema().
  */
 function nodesinblock_schema() {
-  $schema['nodes_in_block'] = array(
+  $schema['nodesinblock'] = array(
     'description' => 'Nodes in block table.',
     'fields' => array(
       'nid' => array(
@@ -86,5 +86,14 @@ function nodesinblock_schema() {
 function nodesinblock_update_6001() {
   $ret = array();
   db_add_field($ret, 'nodes_in_block', 'render', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'size' => 'tiny', 'default' => 0));
+  return $ret;
+}
+
+/**
+ * Update 6002: Rename nodes_in_block table to nodesinblock.
+ */
+function nodesinblock_update_6002() {
+  $ret = array();
+  db_rename_table($ret, 'nodes_in_block', 'nodesinblock');
   return $ret;
 }
