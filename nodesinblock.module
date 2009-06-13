@@ -15,7 +15,7 @@ define('NIB_RENDER_PAGE_WITHOUT_LINKS', '4');
  * Implementation of hook_perm().
  */
 function nodesinblock_perm() {
-  return array('administer nodes in block');
+  return array('administer nodes in block configuration', 'administer nodes in block queue');
 }
 
 /**
@@ -51,7 +51,7 @@ function nodesinblock_menu() {
     'description' => 'Configure settings for nodes in block.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('nodesinblock_settings'),
-    'access arguments' => array('administer nodes in block'),
+    'access arguments' => array('administer nodes in block configuration'),
     'file' => 'nodesinblock.admin.inc',
   );
   $items['admin/settings/nodesinblock/default'] = array(
@@ -64,7 +64,7 @@ function nodesinblock_menu() {
     'description' => 'Nodes in block queue.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('nodesinblock_queue'),
-    'access arguments' => array('administer nodes in block'),
+    'access arguments' => array('administer nodes in block queue'),
     'file' => 'nodesinblock.admin.inc',
     'type' => MENU_LOCAL_TASK,
   );
@@ -233,7 +233,7 @@ function nodesinblock_tabtitle($node) {
  * @return TRUE or FALSE
  */
 function nodesinblock_nodequeue_access($node) {
-  if (node_access('update', $node) && user_access('administer nodes in block') && isset($node->nodesinblock)) {
+  if (node_access('update', $node) && user_access('administer nodes in block queue') && isset($node->nodesinblock)) {
     return TRUE;
   }
   return FALSE;
