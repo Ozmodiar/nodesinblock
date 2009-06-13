@@ -34,6 +34,18 @@ function nodesinblock_theme() {
  */
 function nodesinblock_menu() {
   $items = array();
+  $items['node/%node/nodesinblock'] = array(
+    'title' => 'Nodes in block',
+    'description' => 'Nodes in block queue.',
+    'title callback' => 'nodesinblock_tabtitle',
+    'title arguments' => array(1),
+    'page callback' => 'nodesinblock_nodequeue',
+    'page arguments' => array(1),
+    'access callback' => 'nodesinblock_nodequeue_access',
+    'access arguments' => array(1),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
+  );
   $items['admin/settings/nodesinblock'] = array(
     'title' => 'Nodes in block',
     'description' => 'Configure settings for nodes in block.',
@@ -147,6 +159,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
  * Implementation of hook_nodeapi().
  */
 function nodesinblock_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  // Save nodesinblock settings.
   if (isset($node->nodesinblock_enable)) {
     switch ($op) {
       case 'validate':
@@ -158,8 +171,17 @@ function nodesinblock_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         break;
     }
   }
-  if ($op == 'delete' && db_result(db_query("SELECT nid FROM {nodesinblock} WHERE nid = %d", $node->nid)) != FALSE) {
-    _nodesinblock_save($node, 'delete');
+  // Load & delete operation.
+  switch ($op) {
+    case 'load':
+      $delta = db_fetch_object(db_query("SELECT delta, nid FROM {nodesinblock} WHERE nid = %d", $node->nid));
+      if (isset($delta->nid)) {
+        $node->nodesinblock = $delta->delta;
+      }
+      break;
+    case 'delete':
+      _nodesinblock_save($node, 'delete');
+      break;
   }
 }
 
@@ -192,21 +214,37 @@ function nodesinblock_block($op = 'list', $delta = 0, $edit = array()) {
 }
 
 /**
- * Implementation of hook_link().
+ * Tab title.
+ *
+ * @param stdClass $node The current node.
+ * @return title.
  */
-function nodesinblock_link($type, $object, $teaser = FALSE) {
-  $links = array();
-  $saved_types = variable_get('nodesinblock_contenttypes', array());
-  if ($type == 'node' && !$teaser && user_access('administer nodes in block') &&
-      isset($saved_types[$object->type]) && $saved_types[$object->type] != '0') {
-    $delta = db_result(db_query("SELECT delta FROM {nodesinblock} WHERE nid = %d", $object->nid));
-    $delta = ($delta != '0') ? '/'. $delta : '';
-    $links['nodesinblock_queue'] = array(
-      'title' => t('Manage nodes in block queue'),
-      'href' => 'admin/settings/nodesinblock/queue'. $delta
-    );
+function nodesinblock_tabtitle($node) {
+  $i = $node->nodesinblock;
+  $a = $i + 1;
+  $title = check_plain(variable_get('nodesinblock_friendlyname_'. $i, t('Nodes in block '. $a)));
+  return $title;
+}
+
+/**
+ * Access callback: check that user has access to configure nodes in block queue.
+ *
+ * @param stdClass $node The current node.
+ * @return TRUE or FALSE
+ */
+function nodesinblock_nodequeue_access($node) {
+  if (node_access('update', $node) && user_access('administer nodes in block') && isset($node->nodesinblock)) {
+    return TRUE;
   }
-  return $links;
+  return FALSE;
+}
+
+/**
+ * Nodes in block queue tab.
+ */
+function nodesinblock_nodequeue($node) {
+  module_load_include('inc', 'nodesinblock', 'nodesinblock.admin');
+  return drupal_get_form('nodesinblock_queue', $node->nodesinblock, FALSE, FALSE);
 }
 
 /**

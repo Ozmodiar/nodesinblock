@@ -119,9 +119,10 @@ function nodesinblock_settings() {
  * Menu callback to look at the queue for nodes in block.
  *
  * @param integer $block The delta of the block.
- * @param integer $links Whether to render the blocklinks or not.
+ * @param integer $show_block_links Whether to render the blocklinks or not.
+ * @param integer $show_create_links Whether to render the create node links or not.
  */
-function nodesinblock_queue($form_state, $block = NULL, $links = TRUE) {
+function nodesinblock_queue($form_state, $block = NULL, $show_block_links = TRUE, $show_create_links = TRUE) {
   $form = array();
   $form['nodes'] = array('#tree' => TRUE);
 
@@ -129,33 +130,35 @@ function nodesinblock_queue($form_state, $block = NULL, $links = TRUE) {
   if ($block == NULL) $block = 0;
 
   // Blocklinks.
-  $blocklinks = array();
-  for ($i = 0, $a = 1; $i < $number_of_blocks; $i++, $a++) {
-    $title = check_plain(variable_get('nodesinblock_friendlyname_'. $i, t('Nodes in block '. $a)));
-    $delta = ($i != '0') ? '/'. $i : '';
-    $blocklinks[] = array(
-    	'title' => $title,
-    	'href' => 'admin/settings/nodesinblock/queue'. $delta
-    );
-  }
-  if ($links == TRUE) {
+  if ($show_block_links == TRUE) {
+    $blocklinks = array();
+    for ($i = 0, $a = 1; $i < $number_of_blocks; $i++, $a++) {
+      $title = check_plain(variable_get('nodesinblock_friendlyname_'. $i, t('Nodes in block '. $a)));
+      $delta = ($i != '0') ? '/'. $i : '';
+      $blocklinks[] = array(
+      	'title' => $title,
+      	'href' => 'admin/settings/nodesinblock/queue'. $delta
+      );
+    }
     $form['blocklinks'] = array('#type' => 'item', '#value' => theme('links', $blocklinks));
   }
 
   // Content create links.
-  $createlinks = array();
-  $saved_delta = $block + 1;
-  $saved_types = variable_get('nodesinblock_contenttypes', array());
-  foreach ($saved_types as $type) {
-    $deltas = variable_get('nodesinblock_'. $type .'_block', array());
-    if (isset($deltas[$saved_delta]) && $deltas[$saved_delta] != 0) {
-      $createlinks[] = array(
-      	'title' => t('Create new @type', array('@type' => $type)),
-      	'href' => 'node/add/'. $type,
-      );
+  if ($show_create_links == TRUE) {
+    $createlinks = array();
+    $saved_delta = $block + 1;
+    $saved_types = variable_get('nodesinblock_contenttypes', array());
+    foreach ($saved_types as $type) {
+      $deltas = variable_get('nodesinblock_'. $type .'_block', array());
+      if (isset($deltas[$saved_delta]) && $deltas[$saved_delta] != 0) {
+        $createlinks[] = array(
+        	'title' => t('Create new @type', array('@type' => $type)),
+        	'href' => 'node/add/'. $type,
+        );
+      }
     }
+    $form['createlinks'] = array('#type' => 'item', '#value' => theme('links', $createlinks));
   }
-  $form['createlinks'] = array('#type' => 'item', '#value' => theme('links', $createlinks));
 
   // Get nodes and store them in #nodes key.
   $query = "SELECT n.nid, n.title, n.status as node_status, nib.status as nodesinblock_status,
@@ -232,6 +235,11 @@ function theme_nodesinblock_queue($form) {
     $rows[] = $row;
   }
 
+  if (isset($form['blocklinks']))
+  $output .= drupal_render($form['blocklinks']);
+  if (isset($form['createlinks']))
+  $output .= drupal_render($form['createlinks']);
+
   if ($rows) {
 
     drupal_add_tabledrag('nodesinblock', 'order', 'sibling', 'nodes-weight');
@@ -244,16 +252,10 @@ function theme_nodesinblock_queue($form) {
       t('Weight'),
       t('Operations'),
     );
-    if (isset($form['blocklinks']))
-    $output .= drupal_render($form['blocklinks']);
-    $output .= drupal_render($form['createlinks']);
     $output .= theme('table', $header, $rows, array('id' => 'nodesinblock'));
     $output .= drupal_render($form);
   }
   else {
-    if (isset($form['blocklinks']))
-    $output .= drupal_render($form['blocklinks']);
-    $output .= drupal_render($form['createlinks']);
     $output .= t('No nodes found.');
   }
 
