@@ -45,7 +45,7 @@ function nodesinblock_settings() {
         '#type' => 'textfield',
         '#title' => t('User friendly name for block') .' '. $a,
         '#default_value' => check_plain(variable_get('nodesinblock_friendlyname_'. $i, t('Nodes in block '. $a))),
-      	'#description' => t('Only use alphanumeric characters.'),
+        '#description' => t('Only use alphanumeric characters.'),
       );
       $form['general_settings']['nodesinblock_visibility_'. $i] = array(
         '#type' => 'select',
@@ -80,7 +80,7 @@ function nodesinblock_settings() {
           '#title' => t('Blocks'),
           '#options' => $block_options,
           '#default_value' => variable_get('nodesinblock_'. $key .'_block', array()),
-          '#prefix' => '<div style="float: left; padding:5px; margin-right: 10px; border: 1px solid #cccccc;"> <strong>'.t('Configure @key', array('@key' => $key)) .'</strong>',
+          '#prefix' => '<div style="float: left; padding:5px; margin-right: 10px; border: 1px solid #cccccc;"> <strong>'. t('Configure @key', array('@key' => $key)) .'</strong>',
         );
 
         $form['contenttypes_block']['nodesinblock_'. $key .'_label'] = array(
@@ -201,8 +201,8 @@ function nodesinblock_queue($form_state, $block = NULL, $show_block_links = TRUE
       $title = check_plain(variable_get('nodesinblock_friendlyname_'. $i, t('Nodes in block '. $a)));
       $delta = ($i != '0') ? '/'. $i : '';
       $blocklinks[] = array(
-      	'title' => $title,
-      	'href' => 'admin/settings/nodesinblock/queue'. $delta
+        'title' => $title,
+        'href' => 'admin/settings/nodesinblock/queue'. $delta
       );
     }
     $form['blocklinks'] = array('#type' => 'item', '#value' => theme('links', $blocklinks));
@@ -217,8 +217,8 @@ function nodesinblock_queue($form_state, $block = NULL, $show_block_links = TRUE
       $deltas = variable_get('nodesinblock_'. $type .'_block', array());
       if (isset($deltas[$saved_delta]) && $deltas[$saved_delta] != 0) {
         $createlinks[] = array(
-        	'title' => t('Create new @type', array('@type' => $type)),
-        	'href' => 'node/add/'. $type,
+          'title' => t('Create new @type', array('@type' => $type)),
+          'href' => 'node/add/'. $type,
         );
       }
     }

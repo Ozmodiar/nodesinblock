@@ -128,7 +128,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
       );
       $form['nodesinblock']['nodesinblock_delta'] = array(
         '#prefix' => '<div id="nodesinblock_admin">',
-      	'#type' => 'select',
+        '#type' => 'select',
         '#title' => t('Select region'),
         '#options' => $block_options,
         '#default_value' => $node_info['delta'],
@@ -212,8 +212,9 @@ function nodesinblock_block($op = 'list', $delta = 0, $edit = array()) {
       return $blocks;
       break;
     case 'view':
+      $a = $delta + 1;
       $block = array(
-        'subject' => check_plain(variable_get('nodesinblock_friendlyname_'. $delta, t('Nodes in block '. $delta))),
+        'subject' => check_plain(variable_get('nodesinblock_friendlyname_'. $delta, t('Nodes in block '. $a))),
         'content' => _nodesinblock_show($delta)
       );
       return $block;
