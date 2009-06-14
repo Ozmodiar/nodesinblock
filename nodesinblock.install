@@ -19,6 +19,7 @@ function nodesinblock_install() {
 function nodesinblock_uninstall() {
   drupal_uninstall_schema('nodesinblock');
   db_query("DELETE FROM {variable} WHERE name LIKE 'nodesinblock_%%'");
+  db_query("DELETE FROM {blocks} where module = 'nodesinblock'");
   cache_clear_all('variables', 'cache');
 }
 

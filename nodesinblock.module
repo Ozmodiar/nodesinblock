@@ -68,6 +68,14 @@ function nodesinblock_menu() {
     'file' => 'nodesinblock.admin.inc',
     'type' => MENU_LOCAL_TASK,
   );
+  $items['admin/settings/nodesinblock/clear'] = array(
+    'title' => 'Clear settings',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('nodesinblock_settings_clear_confirm'),
+    'access arguments' => array('administer nodes in block configuration'),
+    'file' => 'nodesinblock.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
   return $items;
 }
 

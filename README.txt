@@ -9,8 +9,8 @@ Overview:
 --------
 Nodes in block makes it possible to add nodes into a block. A number of configurable 
 blocks can be made available which you can assign to a region. On the node content form,
-you define the block and visibility per node. The block which this node is assigned
-to will inherit these visibility settings. With this module, you don't have to explain 
+you select the block and visibility per node. The block which this node is assigned
+to will inherit the node's visibility settings. With this module, you don't have to explain 
 your customers how blocks work but is still able to decide on which pages content must be 
 rendered.
 

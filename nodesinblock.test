@@ -34,5 +34,58 @@ class NodesInBlock extends DrupalWebTestCase {
     fclose($debug);
   }
 
+  /**
+   * Helper function to set configuration.
+   */
+  function _setNodesinblockConfiguration() {
+    $variables = array(
+      'nodesinblock_contenttypes' => 'a:2:{s:4:"page";s:4:"page";s:5:"story";s:5:"story";}',
+      'nodesinblock_friendlyname_0' => 's:16:"Nodes in block 1";',
+      'nodesinblock_friendlyname_1' => 's:16:"Nodes in block 2";',
+      'nodesinblock_friendlyname_2' => 's:16:"Nodes in block 3";',
+      'nodesinblock_visibility_0' => 's:1:"1";',
+      'nodesinblock_visibility_1' => 's:1:"1";',
+      'nodesinblock_visibility_2' => 's:1:"1";',
+    	'nodesinblock_nrofblocks' => 's:1:"3";',
+      'nodesinblock_page_block' => 'a:3:{i:1;i:1;i:2;i:2;i:3;i:0;}',
+      'nodesinblock_page_collapsed' => 'i:1;',
+      'nodesinblock_page_collapsible' => 'i:1;',
+      'nodesinblock_page_label' => 's:14:"Nodes in block";',
+      'nodesinblock_page_render' => 's:1:"0";',
+      'nodesinblock_story_block' => 'a:3:{i:2;i:2;i:3;i:3;i:1;i:0;}',
+      'nodesinblock_story_collapsed' => 'i:1;',
+      'nodesinblock_story_collapsible' => 'i:1;',
+      'nodesinblock_story_label' => 's:14:"Nodes in block";',
+      'nodesinblock_story_render' => 's:1:"0";',
+    );
+    foreach ($variables as $key => $value) {
+      db_query("INSERT INTO {variable} (name, value) VALUES ('%s', '%s')", $key, $value);
+    }
+    cache_clear_all('*', 'cache');
+  }
 
+  /**
+   * Test submitting of nodes and see if they appear
+   * in blocks and how they are rendered.
+   */
+  function testNodeSubmissions() {
+    $this->_setNodesinblockConfiguration();
+    $admin_user = $this->drupalCreateUser(array('administer blocks', 'administer nodes', 'administer nodes in block configuration', 'administer nodes in block queue'));
+    $this->drupalLogin($admin_user);
+
+    // Standard settings.
+    $edit = array('title' => 'Title', 'body' => 'Text');
+    $get = $this->drupalPost('node/add/page', $edit, t('Save'));
+    $this->_debugHelper($get);
+    $result = db_result(db_query("SELECT nid FROM {nodesinblock} WHERE nid = %d", '1'));
+    $this->assertTrue($result, t('Node in block saved in nodesinblock table', t('Node submission')));
+
+  }
+
+  /**
+   * Test the queue
+   */
+  function testNodesinblockQueue() {
+
+  }
 }
