@@ -46,7 +46,6 @@ class NodesInBlock extends DrupalWebTestCase {
       'nodesinblock_visibility_0' => 's:1:"1";',
       'nodesinblock_visibility_1' => 's:1:"1";',
       'nodesinblock_visibility_2' => 's:1:"1";',
-      'nodesinblock_nrofblocks' => 's:1:"3";',
       'nodesinblock_page_block' => 'a:3:{i:1;i:1;i:2;i:2;i:3;i:0;}',
       'nodesinblock_page_collapsed' => 'i:1;',
       'nodesinblock_page_collapsible' => 'i:1;',
@@ -61,18 +60,12 @@ class NodesInBlock extends DrupalWebTestCase {
     foreach ($variables as $key => $value) {
       db_query("INSERT INTO {variable} (name, value) VALUES ('%s', '%s')", $key, $value);
     }
-    cache_clear_all('*', 'cache');
+    variable_set('nodesinblock_nrofblocks', '3');
 
     $this->drupalGet('admin/build/block');
     db_query("UPDATE {blocks} set status = 1, region = 'right' where delta = 0 AND module = 'nodesinblock'");
     db_query("UPDATE {blocks} set status = 1, region = 'right' where delta = 1 AND module = 'nodesinblock'");
     db_query("UPDATE {blocks} set status = 1, region = 'right' where delta = 2 AND module = 'nodesinblock'");
-
-    $result = db_query("SELECT * FROM {blocks}");
-    while ($row = db_fetch_object($result)) {
-      $line = $row->module ." - delta ". $row->delta ." - status: ". $row->status ." - region: ". $row->region;
-      $this->_debugHelper($line);
-    }
   }
 
   /**
@@ -92,6 +85,13 @@ class NodesInBlock extends DrupalWebTestCase {
     $this->drupalPost('node/'. $nid .'/edit', $edit, t('Save'));
     $result = db_result(db_query("SELECT nid FROM {nodesinblock} WHERE nid = %d", $nid));
     $this->assertTrue($result, 'Node '. $nid .' updated in nodesinblock table', 'Node submission');
+  }
+
+  /**
+   * Helper function to get visibility from block.
+   */
+  function _getVisibility($delta) {
+    return db_result(db_query("SELECT pages from {blocks} WHERE module = 'nodesinblock' AND delta = %d", $delta));
   }
 
   /**
@@ -144,12 +144,32 @@ class NodesInBlock extends DrupalWebTestCase {
     $this->assertRaw('Title 1', 'Title 1 node found');
     $this->assertRaw('Nodes in block 1', 'Block nodes in block 1 found');
     $this->assertRaw('Title 2', 'Title 2 node found');
-  }
 
-  /**
-   * Test the queue
-   */
-  function testNodesinblockQueue() {
+    // Do some tests on visibility settings of blocks.
+    $this->_updateNode('1', array('nodesinblock_delta' => '0', 'nodesinblock_visibility' => '*'));
+    $this->_updateNode('2', array('nodesinblock_delta' => '0', 'nodesinblock_visibility' => '<front>'));
+    $visib = $this->_getVisibility('0');
+    $visib = explode("\n", $visib);
+    $this->assertTrue(in_array('<front>', $visib, '&lt;front&gt; visibility found.'));
+    $this->assertTrue(in_array('*', $visib, '* visibility found.'));
+    $this->_updateNode('1', array('nodesinblock_delta' => '0', 'nodesinblock_visibility' => 'node/add'));
+    $this->_updateNode('2', array('nodesinblock_delta' => '0', 'nodesinblock_visibility' => 'user'));
+    $visib = $this->_getVisibility('0');
+    $visib = explode("\n", $visib);
+    $this->assertFalse(in_array('<front>', $visib, '&lt;front&gt; visibility not found.'));
+    $this->assertFalse(in_array('*', $visib, '&lt;front&gt; visibility not found.'));
+    $this->assertTrue(in_array('node/add', $visib, 'node/add visibility found.'));
+    $this->assertTrue(in_array('user', $visib, 'user visibility found.'));
 
+    // Delete node and see
+    // 1: that record is gone in nodesinblock table.
+    // 2: visibility of block is good too.
+    node_delete('2');
+    $result = db_result(db_query("SELECT nid FROM {nodesinblock} WHERE nid = 2"));
+    $this->assertFalse($result, 'Row has been deleted from nodesinblock table');
+    $visib = $this->_getVisibility('0');
+    $visib = explode("\n", $visib);
+    $this->assertFalse(in_array('user', $visib, 'user visibility not found.'));
+    $this->assertTrue(in_array('node/add', $visib, 'node/add visibility found.'));
   }
 }
