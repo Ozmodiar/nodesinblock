@@ -188,7 +188,10 @@ function nodesinblock_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       }
       break;
     case 'delete':
-      _nodesinblock_save($node, 'delete');
+      if (isset($node->nodesinblock)) {
+        $node->nodesinblock_delta = $node->nodesinblock;
+        _nodesinblock_save($node, 'delete');
+      }
       break;
   }
 }
