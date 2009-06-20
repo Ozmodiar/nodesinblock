@@ -156,8 +156,20 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         '#default_value' => $node_info['visibility'],
         '#suffix' => '</div>',
       );
+
+      // Redirect to queue tab the first time.
+      if (!isset($form['#node']->nid)) {
+        $form['buttons']['submit']['#submit'][] = '_nodesinblock_redirect_firsttime';
+      }
     }
   }
+}
+
+/**
+ * Redirect the first time to the tab when node is created.
+ */
+function _nodesinblock_redirect_firsttime($form, &$form_state) {
+  $form_state['redirect'] = 'node/'. $form_state['nid'] .'/nodesinblock';
 }
 
 /**
