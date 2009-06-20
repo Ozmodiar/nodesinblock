@@ -124,7 +124,6 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         '#value' => 1,
       );
       $form['nodesinblock']['nodesinblock_delta'] = array(
-        '#prefix' => '<div id="nodesinblock_admin">',
         '#type' => 'select',
         '#title' => t('Select region'),
         '#options' => $block_options,
@@ -149,11 +148,33 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         $form['nodesinblock']['nodesinblock_render']['#type'] = 'value';
         $form['nodesinblock']['nodesinblock_render']['#value'] = variable_get('nodesinblock_'. $form['#node']->type .'_render', 0);
       }
+
+      // Visibility options. The custom value will make sure the textarea is made visible
+      // so the user can enter custom paths instead of one selected. When using the select box,
+      // we copy the value to the invisible textarea. We make it possible to use a setting
+      // to add more options to the visibility_options array via a variable_get('nodesinblock_visibility_extra_options', array());
+      drupal_add_js(drupal_get_path('module', 'nodesinblock') .'/nodesinblock.js');
+      $visibility_options = array(
+        '' => t('Custom'),
+        '<front>' => t('Homepage'),
+        '*' => t('All pages'),
+      );
+      $visibility_options += variable_get('nodesinblock_visibility_extra_options', array());
+      $default_value = (in_array($node_info['visibility'], array_keys($visibility_options))) ? $node_info['visibility'] : '';
+      $form['nodesinblock']['nodesinblock_visibility_select'] = array(
+        '#type' => 'select',
+        '#title' => t('Visibility settings'),
+        '#description' => t('Select custom if you want more control about paths.'),
+        '#options' => $visibility_options,
+        '#default_value' => $default_value,
+        '#attributes' => array('onChange' => 'javascript:NodesInBlockCheckOptions(); return false;'),
+      );
+      $display = (in_array($node_info['visibility'], array_keys($visibility_options))) ? 'none' : 'block';
       $form['nodesinblock']['nodesinblock_visibility'] = array(
         '#type' => 'textarea',
-        '#title' => t('Visibility settings'),
         '#description' => t('Enter one page per line as Drupal paths. The \'*\' character is a wildcard. Example paths are blog for the blog page and blog/* for every personal blog. &lt;front&gt; is the front page.'),
         '#default_value' => $node_info['visibility'],
+        '#prefix' => '<div id="nodesinblock_visibility_textarea" style="display: '. $display .'">',
         '#suffix' => '</div>',
       );
 
