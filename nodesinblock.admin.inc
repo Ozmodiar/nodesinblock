@@ -237,7 +237,7 @@ function nodesinblock_queue($form_state, $block = NULL, $show_block_links = TRUE
     );
     $form['nodes'][$row->nid]['title'] = array(
       '#type' => 'item',
-      '#value' => $row->title,
+      '#value' => check_plain($row->title),
     );
     $form['nodes'][$row->nid]['node_status'] = array(
       '#type' => 'item',
