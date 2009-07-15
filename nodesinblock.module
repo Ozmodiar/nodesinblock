@@ -378,7 +378,7 @@ function _nodesinblock_show($delta) {
       if ($page_match) {
         $node = node_load($row->nid);
         $node->nodesinblock = 1;
-        $output .= '<div class="nodesinblock_'. $node->nid .'">';
+        $output .= '<div class="nodesinblock_'. $node->nid .'" id="nodesinblock_'. $node->nid .'">';
         $links = FALSE;
         if ($row->render == NIB_RENDER_PAGE_WITH_LINKS || $row->render == NIB_RENDER_TEASER_WITH_LINKS) $links = TRUE;
         $output .= ($row->render == NIB_RENDER_TEASER_WITH_LINKS || NIB_RENDER_TEASER_WITHOUT_LINKS) ? node_view($node, TRUE, FALSE, $links) : node_view($node, FALSE, TRUE, $links);
