@@ -92,8 +92,11 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
     $block_options = array();
     $deltas = variable_get('nodesinblock_'. $form['#node']->type .'_block', array());
     foreach ($deltas as $key => $value) {
-      if ($deltas[$a] != 0)
-      $block_options[$i] = check_plain(variable_get('nodesinblock_friendlyname_'. $i, t('Nodes in block '. $a)));
+      if ($deltas[$a] != 0) {
+        $block_name = check_plain(variable_get('nodesinblock_friendlyname_'. $i, t('Nodes in block '. $a)));
+        $type = (variable_get('nodesinblock_visibility_'. $i, '1') == '1') ? t('(Pos)') : t('(Neg)');
+        $block_options[$i] = $block_name .' '. $type;
+      }
       $a++;
       $i++;
     }
@@ -128,6 +131,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         '#title' => t('Select region'),
         '#options' => $block_options,
         '#default_value' => $node_info['delta'],
+        '#description' => t('The code between the round brackets indicate the visibility setting of the block.<br />Pos = Show on only the listed pages.<br />Neg = Show on every page except the listed pages.'),
       );
       $form['nodesinblock']['nodesinblock_weight'] = array(
         '#type' => 'value',
@@ -378,7 +382,7 @@ function _nodesinblock_show($delta) {
       if ($page_match) {
         $node = node_load($row->nid);
         $node->nodesinblock = 1;
-        $output .= '<div class="nodesinblock_'. $node->nid .'" id="nodesinblock_'. $node->nid .'">';
+        $output .= '<div class="nodesinblock_'. $node->nid .'">';
         $links = FALSE;
         if ($row->render == NIB_RENDER_PAGE_WITH_LINKS || $row->render == NIB_RENDER_TEASER_WITH_LINKS) $links = TRUE;
         $output .= ($row->render == NIB_RENDER_TEASER_WITH_LINKS || NIB_RENDER_TEASER_WITHOUT_LINKS) ? node_view($node, TRUE, FALSE, $links) : node_view($node, FALSE, TRUE, $links);

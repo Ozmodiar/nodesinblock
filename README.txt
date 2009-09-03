@@ -14,9 +14,6 @@ to will inherit the node's visibility settings. With this module, you don't have
 your customers how blocks work but is still able to decide on which pages content must be 
 rendered.
 
-A superb screencast, made by Michael Zenner, explaining you the strength of this module 
-can be found here: http://tobedecided.com
-
 Installation:
 -------------
 1. Place this module directory in your modules folder 
@@ -36,6 +33,9 @@ On the node form, you can choose the region, render mode (depending on your sett
 and the visibility of the node. Weight and status of the node in the block can be altered
 by visiting administer -> settings -> nodesinblock -> queue or via the link/tab which every node
 presents you.
+
+You can add extra options in the select box by tweaking the variable 'nodesinblock_visibility_extra_options'
+which by default returns an empty array.
 
 Theming
 -------
