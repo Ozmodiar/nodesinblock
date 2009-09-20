@@ -110,7 +110,13 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         $node_info['render'] = $form_state['values']['nodesinblock_render'];
       }
       elseif (!empty($form['nid']['#value'])) {
-        $node_info = db_fetch_array(db_query("SELECT * FROM {nodesinblock} WHERE nid = %d", $form['nid']['#value']));
+        $temp_info = db_fetch_array(db_query("SELECT * FROM {nodesinblock} WHERE nid = %d", $form['nid']['#value']));
+        if (empty($temp_info->visibility)) {
+          $node_info = array('weight' => 0, 'visibility' => '*', 'delta' => 0, 'render' => NIB_RENDER_PAGE_WITHOUT_LINKS);
+        }
+        else {
+          $node_info = $temp_info;
+        }
       }
       else {
         $node_info = array('weight' => 0, 'visibility' => '*', 'delta' => 0, 'render' => NIB_RENDER_PAGE_WITHOUT_LINKS);
