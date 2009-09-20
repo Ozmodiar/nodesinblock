@@ -285,7 +285,13 @@ function nodesinblock_tabtitle($node) {
  * @return TRUE or FALSE
  */
 function nodesinblock_nodequeue_access($node) {
-  if (node_access('update', $node) && user_access('administer nodes in block queue') && isset($node->nodesinblock)) {
+  $saved_types = variable_get('nodesinblock_contenttypes', array());
+  if (node_access('update', $node) &&
+      user_access('administer nodes in block queue')
+      && isset($node->nodesinblock)
+      && isset($saved_types[$node->type])
+      && $saved_types[$node->type] != '0'
+      ) {
     return TRUE;
   }
   return FALSE;
