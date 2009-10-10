@@ -3,7 +3,6 @@ Nodes in block
 Requires Drupal 6
 
 Author: Kristof De Jaeger - http://drupal.org/user/107403
-Sponsored by One Agency - http://www.one-agency.be
 
 Overview:
 --------
@@ -34,9 +33,6 @@ and the visibility of the node. Weight and status of the node in the block can b
 by visiting administer -> settings -> nodesinblock -> queue or via the link/tab which every node
 presents you.
 
-You can add extra options in the select box by tweaking the variable 'nodesinblock_visibility_extra_options'
-which by default returns an empty array.
-
 Theming
 -------
 Every node in the block can be rendered as a teaser or page. An extra property is also added to 
@@ -51,6 +47,10 @@ else {
   // Normal theming
 }
 ?>
+
+Node Displays
+-------------
+If ND is enabled (http://drupal.org/project/nd), the buildmodes are presented in the render select box.
 
 Support:
 --------

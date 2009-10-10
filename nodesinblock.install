@@ -49,14 +49,6 @@ function nodesinblock_schema() {
         'default' => 0,
         'description' => 'The order of the node in the block.',
       ),
-      'status' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'size' => 'tiny',
-        'default' => 0,
-        'description' => 'Status of content in block.',
-      ),
       'visibility' => array(
         'type' => 'text',
         'not null' => TRUE,
@@ -64,12 +56,11 @@ function nodesinblock_schema() {
         'description' => 'Visibility settings.',
       ),
       'render' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
+        'type' => 'varchar',
+        'length' => 20,
         'not null' => TRUE,
-        'size' => 'tiny',
-        'default' => 1,
-        'description' => 'Render type of node in block, teaser or page.',
+        'default' => '',
+        'description' => 'Render type of node in block, teaser, page or a nd string.',
       ),
     ),
     'primary key' => array('nid'),
@@ -96,5 +87,15 @@ function nodesinblock_update_6001() {
 function nodesinblock_update_6002() {
   $ret = array();
   db_rename_table($ret, 'nodes_in_block', 'nodesinblock');
+  return $ret;
+}
+
+/**
+ * Update 6002: Rename nodes_in_block table to nodesinblock.
+ */
+function nodesinblock_update_6003() {
+  $ret = array();
+  db_drop_field($ret, 'nodesinblock', 'status');
+  db_change_field($ret, 'nodesinblock', 'render', 'render', array('type' => 'varchar', 'not null' => TRUE, 'length' => 20, 'default' => ''));
   return $ret;
 }

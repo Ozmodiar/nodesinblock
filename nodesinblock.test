@@ -71,8 +71,8 @@ class NodesInBlock extends DrupalWebTestCase {
   /**
    * Helper function to create a node with standard settings.
    */
-  function _createNode($type, $nid = 1, $data = array()) {
-    $edit = array('title' => 'Title '. $nid, 'body' => 'Text '. $nid);
+  function _createNode($type, $nid = 1, $region = 0, $vis = '*') {
+    $edit = array('title' => 'Title '. $nid, 'body' => 'Text '. $nid, 'nodesinblock_delta' => $region, 'nodesinblock_visibility' => $vis, 'nodesinblock_render' => NIB_RENDER_PAGE_WITH_LINKS);
     $this->drupalPost('node/add/'. $type, $edit, t('Save'));
     $result = db_result(db_query("SELECT nid FROM {nodesinblock} WHERE nid = %d", $nid));
     $this->assertTrue($result, 'Node '. $nid .' saved in nodesinblock table', 'Node submission');
@@ -104,7 +104,7 @@ class NodesInBlock extends DrupalWebTestCase {
     $this->_setNodesinblockConfiguration();
 
     // Created a first node.
-    $this->_createNode('page');
+    $this->_createNode('page', 1);
     $this->assertRaw('Nodes in block 1', 'Nodes in block 1 queue found');
 
     // Should show up everywhere.

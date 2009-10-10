@@ -89,7 +89,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
 
     $a = 1;
     $i = 0;
-    $block_options = array();
+    $block_options[-1] = t('None');
     $deltas = variable_get('nodesinblock_'. $form['#node']->type .'_block', array());
     foreach ($deltas as $key => $value) {
       if ($deltas[$a] != 0) {
@@ -103,6 +103,8 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
 
     if (!empty($block_options)) {
 
+      $node_info = array('weight' => 0, 'visibility' => '*', 'delta' => -1, 'render' => NIB_RENDER_PAGE_WITHOUT_LINKS);
+
       if (!empty($form_state['values'])) {
         $node_info['visibility'] = $form_state['values']['nodesinblock_visibility'];
         $node_info['weight'] = $form_state['values']['nodesinblock_weight'];
@@ -110,16 +112,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         $node_info['render'] = $form_state['values']['nodesinblock_render'];
       }
       elseif (!empty($form['nid']['#value'])) {
-        $temp_info = db_fetch_array(db_query("SELECT * FROM {nodesinblock} WHERE nid = %d", $form['nid']['#value']));
-        if (empty($temp_info->visibility)) {
-          $node_info = array('weight' => 0, 'visibility' => '*', 'delta' => 0, 'render' => NIB_RENDER_PAGE_WITHOUT_LINKS);
-        }
-        else {
-          $node_info = $temp_info;
-        }
-      }
-      else {
-        $node_info = array('weight' => 0, 'visibility' => '*', 'delta' => 0, 'render' => NIB_RENDER_PAGE_WITHOUT_LINKS);
+        $node_info = db_fetch_array(db_query("SELECT * FROM {nodesinblock} WHERE nid = %d", $form['nid']['#value']));
       }
 
       $form['nodesinblock'] = array(
@@ -128,10 +121,12 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         '#collapsible' => variable_get('nodesinblock_'. $form['#node']->type .'_collapsible', TRUE),
         '#collapsed' => variable_get('nodesinblock_'. $form['#node']->type .'_collapsed', TRUE),
       );
+
       $form['nodesinblock']['nodesinblock_enable'] = array(
         '#type' => 'value',
         '#value' => 1,
       );
+
       $form['nodesinblock']['nodesinblock_delta'] = array(
         '#type' => 'select',
         '#title' => t('Select region'),
@@ -139,68 +134,33 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         '#default_value' => $node_info['delta'],
         '#description' => t('The code between the round brackets indicate the visibility setting of the block.<br />Pos = Show on only the listed pages.<br />Neg = Show on every page except the listed pages.'),
       );
+
       $form['nodesinblock']['nodesinblock_weight'] = array(
         '#type' => 'value',
         '#value' => $node_info['weight']
       );
+
       $form['nodesinblock']['nodesinblock_render'] = array(
         '#type' => 'select',
         '#title' => t('Render node as'),
-        '#options' => array(
-          NIB_RENDER_TEASER_WITH_LINKS => t('Teaser with links'),
-          NIB_RENDER_TEASER_WITHOUT_LINKS => t('Teaser without links'),
-          NIB_RENDER_PAGE_WITH_LINKS => t('Page with links'),
-          NIB_RENDER_PAGE_WITHOUT_LINKS => t('Page without links')
-        ),
+        '#options' => _nodesinblock_render_status(0),
         '#default_value' => $node_info['render']
       );
-      if (variable_get('nodesinblock_'. $form['#node']->type .'_render', 0) != 0) {
+      if (variable_get('nodesinblock_'. $form['#node']->type .'_render', '0') != '0') {
         $form['nodesinblock']['nodesinblock_render']['#type'] = 'value';
         $form['nodesinblock']['nodesinblock_render']['#value'] = variable_get('nodesinblock_'. $form['#node']->type .'_render', 0);
       }
 
-      // Visibility options. The custom value will make sure the textarea is made visible
-      // so the user can enter custom paths instead of one selected. When using the select box,
-      // we copy the value to the invisible textarea. We make it possible to use a setting
-      // to add more options to the visibility_options array via a variable_get('nodesinblock_visibility_extra_options', array());
-      drupal_add_js(drupal_get_path('module', 'nodesinblock') .'/nodesinblock.js');
-      $visibility_options = array(
-        '' => t('Custom'),
-        '<front>' => t('Homepage'),
-        '*' => t('All pages'),
-      );
-      $visibility_options += variable_get('nodesinblock_visibility_extra_options', array());
-      $default_value = (in_array($node_info['visibility'], array_keys($visibility_options))) ? $node_info['visibility'] : '';
-      $form['nodesinblock']['nodesinblock_visibility_select'] = array(
-        '#type' => 'select',
-        '#title' => t('Visibility settings'),
-        '#description' => t('Select custom if you want more control about paths.'),
-        '#options' => $visibility_options,
-        '#default_value' => $default_value,
-        '#attributes' => array('onChange' => 'javascript:NodesInBlockCheckOptions(); return false;'),
-      );
-      $display = (in_array($node_info['visibility'], array_keys($visibility_options))) ? 'none' : 'block';
       $form['nodesinblock']['nodesinblock_visibility'] = array(
+        '#title' => t('Visibility'),
         '#type' => 'textarea',
         '#description' => t('Enter one page per line as Drupal paths. The \'*\' character is a wildcard. Example paths are blog for the blog page and blog/* for every personal blog. &lt;front&gt; is the front page.'),
         '#default_value' => $node_info['visibility'],
         '#prefix' => '<div id="nodesinblock_visibility_textarea" style="display: '. $display .'">',
         '#suffix' => '</div>',
       );
-
-      // Redirect to queue tab the first time.
-      if (!isset($form['#node']->nid)) {
-        $form['buttons']['submit']['#submit'][] = '_nodesinblock_redirect_firsttime';
-      }
     }
   }
-}
-
-/**
- * Redirect the first time to the tab when node is created.
- */
-function _nodesinblock_redirect_firsttime($form, &$form_state) {
-  $form_state['redirect'] = 'node/'. $form_state['nid'] .'/nodesinblock';
 }
 
 /**
@@ -310,7 +270,7 @@ function nodesinblock_nodequeue($node) {
  */
 function _nodesinblock_validate($node) {
   $visibility = $node->nodesinblock_visibility;
-  if ($node->nodesinblock_enable != '0' && empty($visibility)) {
+  if ($node->nodesinblock_delta != -1 && empty($visibility)) {
     form_set_error('nodesinblock_visibility', t('Visibility field is required.'));
   }
 }
@@ -330,6 +290,15 @@ function _nodesinblock_render_status($status, $return = FALSE) {
     NIB_RENDER_PAGE_WITHOUT_LINKS => t('Page without links')
   );
 
+  // Node Displays support.
+  if (module_exists('nd')) {
+    $render_states = array();
+    $build_modes = nd_get_build_modes();
+    foreach ($build_modes as $key => $build_mode) {
+      $render_states[$key] = $build_mode['build modes'][$key]['title'];
+    }
+  }
+
   if ($return == TRUE) return $render_states[$status];
   else return $render_states;
 }
@@ -343,12 +312,11 @@ function _nodesinblock_save($node, $op) {
   db_query("DELETE FROM {nodesinblock} WHERE nid = %d", $node->nid);
 
   // Save if node is not deleted
-  if ($op != 'delete') {
+  if ($op != 'delete' && $node->nodesinblock_delta != -1) {
     $nodeinblock = new stdClass;
     $nodeinblock->nid = $node->nid;
     $nodeinblock->delta = $node->nodesinblock_delta;
     $nodeinblock->weight = $node->nodesinblock_weight;
-    $nodeinblock->status = $node->nodesinblock_enable;
     $nodeinblock->visibility = trim($node->nodesinblock_visibility);
     $nodeinblock->render = $node->nodesinblock_render;
     drupal_write_record('nodesinblock', $nodeinblock);
@@ -356,7 +324,7 @@ function _nodesinblock_save($node, $op) {
 
   // Get visibility paths.
   $visibility = array();
-  $result = db_query("SELECT visibility FROM {nodesinblock} nib INNER JOIN {node} n on n.nid = nib.nid WHERE nib.delta = %d AND nib.status > 0 AND n.status = 1", $node->nodesinblock_delta);
+  $result = db_query("SELECT visibility FROM {nodesinblock} nib INNER JOIN {node} n on n.nid = nib.nid WHERE nib.delta = %d AND n.status = 1", $node->nodesinblock_delta);
   while ($row = db_fetch_object($result)) {
     $node_visibility = explode("\n", $row->visibility);
     foreach ($node_visibility as $path)
@@ -375,7 +343,7 @@ function _nodesinblock_show($delta) {
   $output = '';
   $query = "SELECT nib.nid, visibility, render FROM {nodesinblock} nib
     LEFT JOIN {node} n on n.nid = nib.nid
-    WHERE n.status = 1 AND nib.status > 0 AND delta = %d
+    WHERE n.status = 1 AND delta = %d
     ORDER BY weight
   ";
   $result = db_query(db_rewrite_sql($query), $delta);
@@ -394,10 +362,18 @@ function _nodesinblock_show($delta) {
       if ($page_match) {
         $node = node_load($row->nid);
         $node->nodesinblock = 1;
-        $output .= '<div class="nodesinblock_'. $node->nid .'">';
-        $links = FALSE;
-        if ($row->render == NIB_RENDER_PAGE_WITH_LINKS || $row->render == NIB_RENDER_TEASER_WITH_LINKS) $links = TRUE;
-        $output .= ($row->render == NIB_RENDER_TEASER_WITH_LINKS || $row->render == NIB_RENDER_TEASER_WITHOUT_LINKS) ? node_view($node, TRUE, FALSE, $links) : node_view($node, FALSE, TRUE, $links);
+        $output .= '<div class="nodesinblock" id="nodesinblock-'. $node->nid .'">';
+
+        // Support for Node Displays module.
+        if (module_exists('nd')) {
+          $node->build_mode = $row->render;
+          $output .= node_view($node, FALSE, FALSE, FALSE);
+        }
+        else {
+          $links = FALSE;
+          if ($row->render == NIB_RENDER_PAGE_WITH_LINKS || $row->render == NIB_RENDER_TEASER_WITH_LINKS) $links = TRUE;
+          $output .= ($row->render == NIB_RENDER_TEASER_WITH_LINKS || $row->render == NIB_RENDER_TEASER_WITHOUT_LINKS) ? node_view($node, TRUE, FALSE, $links) : node_view($node, FALSE, TRUE, $links);
+        }
         $output .= '</div>';
       }
     }

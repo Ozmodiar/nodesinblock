@@ -226,7 +226,7 @@ function nodesinblock_queue($form_state, $block = NULL, $show_block_links = TRUE
   }
 
   // Get nodes and store them in #nodes key.
-  $query = "SELECT n.nid, n.title, n.status as node_status, nib.status as nodesinblock_status,
+  $query = "SELECT n.nid, n.title, n.status as node_status,
   					nib.weight, nib.visibility FROM {nodesinblock} nib INNER JOIN {node} n
   					on n.nid = nib.nid WHERE nib.delta = %d ORDER BY weight ASC";
   $nodes = db_query($query, $block);
@@ -242,10 +242,6 @@ function nodesinblock_queue($form_state, $block = NULL, $show_block_links = TRUE
     $form['nodes'][$row->nid]['node_status'] = array(
       '#type' => 'item',
       '#value' => ($row->node_status == 1) ? t('published') : t('unpublished'),
-    );
-    $form['nodes'][$row->nid]['block_status'] = array(
-      '#type' => 'checkbox',
-      '#default_value' => $row->nodesinblock_status,
     );
     $form['nodes'][$row->nid]['visibility'] = array(
       '#type' => 'item',
@@ -271,7 +267,7 @@ function nodesinblock_queue($form_state, $block = NULL, $show_block_links = TRUE
  */
 function nodesinblock_queue_submit($form, &$form_state) {
   foreach ($form_state['values']['nodes'] as $node) {
-    db_query("UPDATE {nodesinblock} set weight = %d, status = %d WHERE delta = %d AND nid = %d", $node['weight'], $node['block_status'], $form_state['values']['delta'], $node['nid']);
+    db_query("UPDATE {nodesinblock} set weight = %d WHERE delta = %d AND nid = %d", $node['weight'], $form_state['values']['delta'], $node['nid']);
   }
 }
 
@@ -288,7 +284,6 @@ function theme_nodesinblock_queue($form) {
     $element['weight']['#attributes']['class'] = 'nodes-weight';
 
     $row = array();
-    $row[] = drupal_render($element['block_status']);
     $row[] = drupal_render($element['title']);
     $row[] = drupal_render($element['node_status']);
     $row[] = drupal_render($element['visibility']);
@@ -310,7 +305,6 @@ function theme_nodesinblock_queue($form) {
     drupal_add_tabledrag('nodesinblock', 'order', 'sibling', 'nodes-weight');
 
     $header = array(
-      t('Block status'),
       t('Title'),
       t('Node status'),
       t('Visibility'),
