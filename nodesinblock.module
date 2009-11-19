@@ -218,7 +218,7 @@ function nodesinblock_block($op = 'list', $delta = 0, $edit = array()) {
       $a = $delta + 1;
       $block = array(
         'subject' => check_plain(variable_get('nodesinblock_friendlyname_'. $delta, t('Nodes in block '. $a))),
-        'content' => _nodesinblock_show($delta)
+        'content' => _nodesinblock_show($delta, variable_get('nodesinblock_visibility_'. $delta, '1')),
       );
       return $block;
       break;
@@ -339,7 +339,9 @@ function _nodesinblock_save($node, $op) {
 /**
  * Function callback: get content for a block.
  */
-function _nodesinblock_show($delta) {
+function _nodesinblock_show($delta, $visibility) {
+
+  static $nids = array();
   $output = '';
   $query = "SELECT nib.nid, visibility, render FROM {nodesinblock} nib
     LEFT JOIN {node} n on n.nid = nib.nid
@@ -356,10 +358,11 @@ function _nodesinblock_show($delta) {
       if ($path != $_GET['q']) {
         $page_match = $page_match || drupal_match_path($_GET['q'], $val);
       }
-      $page_match = !(1 xor $page_match);
+      $page_match = !($visibility xor $page_match);
 
       // We have a match, load the node.
-      if ($page_match) {
+      if ($page_match && !isset($nids[$row->nid])) {
+        $nids[$row->nid] = $row->nid;
         $node = node_load($row->nid);
         $node->nodesinblock = 1;
         $output .= '<div class="nodesinblock" id="nodesinblock-'. $node->nid .'">';
