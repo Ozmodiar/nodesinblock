@@ -38,6 +38,7 @@ function nodesinblock_settings() {
     $form['general_settings'] = array(
       '#type' => 'fieldset',
       '#title' => t('Settings per block'),
+      '#description' => t('Note: if you set the visibility setting for the block as "<em>Show on every page except the listed pages</em>", multiple paths will not work correct because of the way that Drupal core block visibility works. You\'ll be better off choosing the default option.')
     );
 
     for ($i = 0, $a = 1; $i < variable_get('nodesinblock_nrofblocks', 1); $i++, $a++) {

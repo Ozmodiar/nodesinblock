@@ -109,17 +109,17 @@ class NodesInBlock extends DrupalWebTestCase {
 
     // Should show up everywhere.
     $this->drupalGet('node');
-    $this->assertRaw('Title 1', 'Title 1 node found');
+    $this->assertRaw('Text 1', 'Title 1 node found');
     $this->drupalGet('node/add');
-    $this->assertRaw('Title 1', 'Title 1 node found');
+    $this->assertRaw('Text 1', 'Title 1 node found');
 
     // Update node to show only up on frontpage.
     $this->_updateNode('1', array('nodesinblock_visibility' => '<front>'));
     $this->drupalGet('node/add');
-    $this->assertNoRaw('Title 1', 'Title 1 node not found');
+    $this->assertNoRaw('Text 1', 'Title 1 node not found');
     $this->assertNoRaw('Nodes in block 1', 'Block nodes in block 1 not found');
     $this->drupalGet('node');
-    $this->assertRaw('Title 1', 'Title 1 node found');
+    $this->assertRaw('Text 1', 'Title 1 node found');
     $this->assertRaw('Nodes in block 1', 'Block nodes in block 1 found');
 
       // Update node and change block to 2.
@@ -129,21 +129,21 @@ class NodesInBlock extends DrupalWebTestCase {
     $this->drupalGet('node');
     $this->assertNoRaw('Nodes in block 1', 'Block nodes in block 1 not found');
     $this->assertRaw('Nodes in block 2', 'Block nodes in block 2 found');
-    $this->assertRaw('Title 1', 'Title 1 node found');
+    $this->assertRaw('Text 1', 'Title 1 node found');
 
     // Create second node.
     $this->_createNode('page', '2');
     $this->assertRaw('Nodes in block 1', 'Nodes in block 1 queue found');
     $this->drupalGet('node/add');
     $this->assertRaw('Nodes in block 1', 'Block nodes in block 1 found');
-    $this->assertRaw('Title 2', 'Title 2 node found');
-    $this->assertNoRaw('Title 1', 'Title 1 node not found');
+    $this->assertRaw('Text 2', 'Title 2 node found');
+    $this->assertNoRaw('Text 1', 'Title 1 node not found');
     $this->assertNoRaw('Nodes in block 2', 'Block nodes in block 2 not found');
     $this->drupalGet('node');
     $this->assertRaw('Nodes in block 2', 'Block nodes in block 2 found');
-    $this->assertRaw('Title 1', 'Title 1 node found');
+    $this->assertRaw('Text 1', 'Title 1 node found');
     $this->assertRaw('Nodes in block 1', 'Block nodes in block 1 found');
-    $this->assertRaw('Title 2', 'Title 2 node found');
+    $this->assertRaw('Text 2', 'Title 2 node found');
 
     // Do some tests on visibility settings of blocks.
     $this->_updateNode('1', array('nodesinblock_delta' => '0', 'nodesinblock_visibility' => '*'));

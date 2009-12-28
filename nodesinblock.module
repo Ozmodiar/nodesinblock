@@ -179,20 +179,12 @@ function nodesinblock_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         break;
     }
   }
-  // Load & delete operation.
-  switch ($op) {
-    case 'load':
-      $delta = db_fetch_object(db_query("SELECT delta, nid FROM {nodesinblock} WHERE nid = %d", $node->nid));
-      if (isset($delta->nid)) {
-        $node->nodesinblock = $delta->delta;
-      }
-      break;
-    case 'delete':
-      if (isset($node->nodesinblock)) {
-        $node->nodesinblock_delta = $node->nodesinblock;
-        _nodesinblock_save($node, 'delete');
-      }
-      break;
+
+  // Delete nodesinblock data.
+  if ($op == 'delete') {
+    _nodeisblock_load($node);
+    $node->nodesinblock_delta = $node->nodesinblock;
+    _nodesinblock_save($node, 'delete');
   }
 }
 
@@ -245,6 +237,7 @@ function nodesinblock_tabtitle($node) {
  * @return TRUE or FALSE
  */
 function nodesinblock_nodequeue_access($node) {
+  _nodeisblock_load($node);
   $saved_types = variable_get('nodesinblock_contenttypes', array());
   if (node_access('update', $node) &&
       user_access('administer nodes in block queue')
@@ -293,14 +286,32 @@ function _nodesinblock_render_status($status, $return = FALSE) {
   // Node Displays support.
   if (module_exists('nd')) {
     $render_states = array();
-    $build_modes = nd_get_build_modes();
-    foreach ($build_modes as $key => $build_mode) {
-      $render_states[$key] = $build_mode['build modes'][$key]['title'];
+    if (function_exists('ds_get_build_modes')) {
+      $build_modes = ds_get_build_modes('nd');
+      foreach ($build_modes as $key => $build_mode) {
+        $render_states[$key] = $build_mode['title'];
+      }
+    }
+    else {
+      $build_modes = nd_get_build_modes();
+      foreach ($build_modes as $key => $build_mode) {
+        $render_states[$key] = $build_mode['build modes'][$key]['title'];
+      }
     }
   }
 
   if ($return == TRUE) return $render_states[$status];
   else return $render_states;
+}
+
+/**
+ * Helper function to load node data for nodesinblock.
+ */
+function _nodeisblock_load(&$node) {
+  $delta = db_fetch_object(db_query("SELECT delta, nid FROM {nodesinblock} WHERE nid = %d", $node->nid));
+  if (isset($delta->nid)) {
+    $node->nodesinblock = $delta->delta;
+  }
 }
 
 /**
@@ -342,14 +353,17 @@ function _nodesinblock_save($node, $op) {
 function _nodesinblock_show($delta, $visibility) {
 
   static $nids = array();
+
   $output = '';
+  $path = drupal_get_path_alias($_GET['q']);
+
   $query = "SELECT nib.nid, visibility, render FROM {nodesinblock} nib
     LEFT JOIN {node} n on n.nid = nib.nid
     WHERE n.status = 1 AND delta = %d
     ORDER BY weight
   ";
   $result = db_query(db_rewrite_sql($query), $delta);
-  $path = drupal_get_path_alias($_GET['q']);
+
   while ($row = db_fetch_object($result)) {
     $paths = explode("\n", trim($row->visibility));
     foreach ($paths as $key => $val) {
@@ -361,8 +375,8 @@ function _nodesinblock_show($delta, $visibility) {
       $page_match = !($visibility xor $page_match);
 
       // We have a match, load the node.
-      if ($page_match && !isset($nids[$row->nid])) {
-        $nids[$row->nid] = $row->nid;
+      if ($page_match && !isset($nids[$delta][$row->nid])) {
+        $nids[$delta][$row->nid] = $row->nid;
         $node = node_load($row->nid);
         $node->nodesinblock = 1;
         $output .= '<div class="nodesinblock" id="nodesinblock-'. $node->nid .'">';

@@ -30,8 +30,11 @@ and assign one or more blocks to a region.
 
 On the node form, you can choose the region, render mode (depending on your settings)
 and the visibility of the node. Weight and status of the node in the block can be altered
-by visiting administer -> settings -> nodesinblock -> queue or via the link/tab which every node
-presents you.
+by visiting administer -> settings -> nodesinblock -> queue.
+
+If you set the visibility setting for the block as "Show on every page except the listed pages", 
+multiple paths will not work correct because of the way that Drupal core block visibility works. 
+You'll be better off choosing the default option.
 
 Theming
 -------
