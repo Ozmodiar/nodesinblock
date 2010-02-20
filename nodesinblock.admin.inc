@@ -11,7 +11,7 @@
  */
 function nodesinblock_settings() {
   $form = array();
-  $content_types = node_get_types('names');
+  $content_types = node_type_get_names();
   $saved_types = variable_get('nodesinblock_contenttypes', array());
 
   $form['nodesinblock'] = array(
@@ -145,7 +145,6 @@ function nodesinblock_settings_save($form, &$form_state) {
 
   drupal_set_message(t('The configuration options have been saved.'));
   cache_clear_all();
-  drupal_rebuild_theme_registry();
 }
 
 /**
