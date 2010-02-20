@@ -1,6 +1,6 @@
 Nodes in block
 --------------
-Requires Drupal 6
+Requires Drupal 7
 
 Author: Kristof De Jaeger - http://drupal.org/user/107403
 
