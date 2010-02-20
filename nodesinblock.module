@@ -114,6 +114,9 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
       elseif (!empty($form['nid']['#value'])) {
         $node_info = db_fetch_array(db_query("SELECT * FROM {nodesinblock} WHERE nid = %d", $form['nid']['#value']));
       }
+      else {
+        $node_info['render'] = '';
+      }
 
       $form['nodesinblock'] = array(
         '#type' => 'fieldset',
