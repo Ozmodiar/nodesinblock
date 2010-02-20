@@ -31,7 +31,7 @@ function nodesinblock_perm() {
 function nodesinblock_theme() {
   return array(
     'nodesinblock_queue' => array(
-      'arguments' => array('form' => NULL),
+      'variables' => array('form' => NULL),
     ),
   );
 }
@@ -119,7 +119,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         $node_info['render'] = $form_state['values']['nodesinblock_render'];
       }
       elseif (!empty($form['nid']['#value'])) {
-        $node_info = db_fetch_array(db_query("SELECT * FROM {nodesinblock} WHERE nid = %d", $form['nid']['#value']));
+        $node_info = db_query("SELECT * FROM {nodesinblock} WHERE nid = :nid", array(':nid' => $form['nid']['#value']))->fetchAssoc();
       }
       else {
         $node_info['render'] = '';
@@ -174,57 +174,64 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
 }
 
 /**
- * Implements hook_nodeapi().
+ * Implements hook_node_validate().
  */
-function nodesinblock_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
-  // Save nodesinblock settings.
+function nodesinblock_node_validate($node) {
   if (isset($node->nodesinblock_enable)) {
-    switch ($op) {
-      case 'validate':
-        _nodesinblock_validate($node);
-        break;
-      case 'insert':
-      case 'update':
-        _nodesinblock_save($node, $op);
-        break;
-    }
-  }
-
-  // Delete nodesinblock data.
-  if ($op == 'delete') {
-    _nodeisblock_load($node);
-    $node->nodesinblock_delta = $node->nodesinblock;
-    _nodesinblock_save($node, 'delete');
+    _nodesinblock_validate($node);
   }
 }
 
 /**
- * Implements hook_block().
+ * Implements hook_node_insert().
  */
-function nodesinblock_block($op = 'list', $delta = 0, $edit = array()) {
-  switch ($op) {
-    case 'list':
-      $number_of_blocks = variable_get('nodesinblock_nrofblocks', 1);
-      for ($i = 0, $a = 1; $i < $number_of_blocks; $i++, $a++) {
-        $blocks[$i] = array(
-          'info' => check_plain(variable_get('nodesinblock_friendlyname_' . $i, t('Nodes in block ' . $a))),
-          'weight' => 0,
-          'enabled' => 0,
-          'region' => 'left',
-          'cache' => BLOCK_CACHE_PER_PAGE,
-        );
-      }
-      return $blocks;
-      break;
-    case 'view':
-      $a = $delta + 1;
-      $block = array(
-        'subject' => check_plain(variable_get('nodesinblock_friendlyname_' . $delta, t('Nodes in block ' . $a))),
-        'content' => _nodesinblock_show($delta, variable_get('nodesinblock_visibility_' . $delta, '1')),
-      );
-      return $block;
-      break;
+function nodesinblock_node_insert($node) {
+  if (isset($node->nodesinblock_enable)) {
+    _nodesinblock_save($node, 'insert');
   }
+}
+
+/**
+ * Implements hook_node_update().
+ */
+function nodesinblock_node_update($node) {
+  if (isset($node->nodesinblock_enable)) {
+    _nodesinblock_save($node, 'update');
+  }
+}
+
+/**
+ * Implements hook_node_delete().
+ */
+function nodesinblock_node_delete() {
+  _nodeisblock_load($node);
+  $node->nodesinblock_delta = $node->nodesinblock;
+  _nodesinblock_save($node, 'delete');
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function nodesinblock_block_info() {
+  $number_of_blocks = variable_get('nodesinblock_nrofblocks', 1);
+  for ($i = 0, $a = 1; $i < $number_of_blocks; $i++, $a++) {
+    $blocks[$i] = array(
+      'info' => check_plain(variable_get('nodesinblock_friendlyname_' . $i, t('Nodes in block ' . $a))),
+    );
+  }
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function nodesinblock_block_view($delta = '') {
+  $a = $delta + 1;
+  $block = array(
+    'subject' => check_plain(variable_get('nodesinblock_friendlyname_' . $delta, t('Nodes in block ' . $a))),
+    'content' => _nodesinblock_show($delta, variable_get('nodesinblock_visibility_' . $delta, '1')),
+  );
+  return $block;
 }
 
 /**
@@ -318,7 +325,7 @@ function _nodesinblock_render_status($status, $return = FALSE) {
  * Helper function to load node data for nodesinblock.
  */
 function _nodeisblock_load(&$node) {
-  $delta = db_fetch_object(db_query("SELECT delta, nid FROM {nodesinblock} WHERE nid = %d", $node->nid));
+  $delta = db_query("SELECT delta, nid FROM {nodesinblock} WHERE nid = :nid", array(':nid' => $node->nid))->fetchObject();
   if (isset($delta->nid)) {
     $node->nodesinblock = $delta->delta;
   }
@@ -330,7 +337,9 @@ function _nodeisblock_load(&$node) {
 function _nodesinblock_save($node, $op) {
 
   // Delete old record.
-  db_query("DELETE FROM {nodesinblock} WHERE nid = %d", $node->nid);
+  db_delete('nodesinblock')
+    ->condition('nid', $node->nid)
+    ->execute();
 
   // Save if node is not deleted
   if ($op != 'delete' && $node->nodesinblock_delta != -1) {
@@ -345,8 +354,8 @@ function _nodesinblock_save($node, $op) {
 
   // Get visibility paths.
   $visibility = array();
-  $result = db_query("SELECT visibility FROM {nodesinblock} nib INNER JOIN {node} n on n.nid = nib.nid WHERE nib.delta = %d AND n.status = 1", $node->nodesinblock_delta);
-  while ($row = db_fetch_object($result)) {
+  $result = db_query("SELECT visibility FROM {nodesinblock} nib INNER JOIN {node} n on n.nid = nib.nid WHERE nib.delta = :delta AND n.status = 1", array(':delta' => $node->nodesinblock_delta));
+  foreach ($result as $row) {
     $node_visibility = explode("\n", $row->visibility);
     foreach ($node_visibility as $path)
     $visibility[] = trim($path);
@@ -354,7 +363,14 @@ function _nodesinblock_save($node, $op) {
 
   // Update blocks table.
   $visibility = array_unique($visibility);
-  db_query("UPDATE {blocks} set visibility = %d, pages = '%s' WHERE module = 'nodesinblock' AND delta = %d", variable_get('nodesinblock_visibility_' . $node->nodesinblock_delta, '1'), implode("\n", $visibility), $node->nodesinblock_delta);
+  db_update('block')
+    ->condition('module', 'nodesinblock')
+    ->condition('delta', $node->nodesinblock_delta)
+    ->fields(array(
+      'visibility' => variable_get('nodesinblock_visibility_' . $node->nodesinblock_delta, '1'),
+      'pages' => implode("\n", $visibility)
+    ))
+    ->execute();
 }
 
 /**
@@ -369,12 +385,14 @@ function _nodesinblock_show($delta, $visibility) {
 
   $query = "SELECT nib.nid, visibility, render FROM {nodesinblock} nib
     LEFT JOIN {node} n on n.nid = nib.nid
-    WHERE n.status = 1 AND delta = %d
+    WHERE n.status = 1 AND delta = :delta
     ORDER BY weight
   ";
-  $result = db_query(db_rewrite_sql($query), $delta);
+  // @todo what with db_rewrite_sql ?
+//  $result = db_query(db_rewrite_sql($query), $delta);
+  $result = db_query($query, array(':delta' => $delta));
 
-  while ($row = db_fetch_object($result)) {
+  foreach ($result as $row) {
     $paths = explode("\n", trim($row->visibility));
     foreach ($paths as $key => $val) {
       // Match the path.
@@ -393,13 +411,17 @@ function _nodesinblock_show($delta, $visibility) {
 
         // Support for Node Displays module.
         if (module_exists('nd')) {
+          // @todo revise with nd, build_mode isn't necessary probably.
           $node->build_mode = $row->render;
-          $output .= node_view($node, FALSE, FALSE, FALSE);
+          $output .= node_view($node, $row->render);
         }
         else {
+          // @todo what with links ?
+          // @todo use render ?
           $links = FALSE;
           if ($row->render == NIB_RENDER_PAGE_WITH_LINKS || $row->render == NIB_RENDER_TEASER_WITH_LINKS) $links = TRUE;
-          $output .= ($row->render == NIB_RENDER_TEASER_WITH_LINKS || $row->render == NIB_RENDER_TEASER_WITHOUT_LINKS) ? node_view($node, TRUE, FALSE, $links) : node_view($node, FALSE, TRUE, $links);
+          $view_mode = ($row->render == NIB_RENDER_TEASER_WITH_LINKS || $row->render == NIB_RENDER_TEASER_WITHOUT_LINKS) ? 'teaser' : 'full';
+          $output .= render(node_view($node, $view_mode));
         }
         $output .= '</div>';
       }
