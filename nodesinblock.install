@@ -7,24 +7,17 @@
  */
 
 /**
- * Implementation of hook_install().
- */
-function nodesinblock_install() {
-  drupal_install_schema('nodesinblock');
-}
-
-/**
- * Implementation of hook_uninstall().
+ * Implements hook_uninstall().
  */
 function nodesinblock_uninstall() {
-  drupal_uninstall_schema('nodesinblock');
-  db_query("DELETE FROM {variable} WHERE name LIKE 'nodesinblock_%%'");
-  db_query("DELETE FROM {blocks} where module = 'nodesinblock'");
+  db_delete('variable')
+    ->condition('name', 'nodesinblock_%', 'LIKE')
+    ->execute();
   cache_clear_all('variables', 'cache');
 }
 
 /**
- * Implementation of hook_schema().
+ * Implements hook_schema().
  */
 function nodesinblock_schema() {
   $schema['nodesinblock'] = array(

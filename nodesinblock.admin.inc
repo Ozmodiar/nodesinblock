@@ -38,24 +38,24 @@ function nodesinblock_settings() {
     $form['general_settings'] = array(
       '#type' => 'fieldset',
       '#title' => t('Settings per block'),
-      '#description' => t('Note: if you set the visibility setting for the block as "<em>Show on every page except the listed pages</em>", multiple paths will not work correct because of the way that Drupal core block visibility works. You\'ll be better off choosing the default option.')
+      '#description' => t('Note: if you set the visibility setting for the block as "<em>Show on every page except the listed pages</em>", multiple paths will not work correct because of the way that Drupal core block visibility works. You\'ll be better off choosing the default option. ')
     );
 
     for ($i = 0, $a = 1; $i < variable_get('nodesinblock_nrofblocks', 1); $i++, $a++) {
-      $form['general_settings']['nodesinblock_friendlyname_'. $i] = array(
+      $form['general_settings']['nodesinblock_friendlyname_' . $i] = array(
         '#type' => 'textfield',
-        '#title' => t('User friendly name for block') .' '. $a,
-        '#default_value' => check_plain(variable_get('nodesinblock_friendlyname_'. $i, t('Nodes in block '. $a))),
+        '#title' => t('User friendly name for block') . ' ' . $a,
+        '#default_value' => check_plain(variable_get('nodesinblock_friendlyname_' . $i, t('Nodes in block ' . $a))),
         '#description' => t('Only use alphanumeric characters.'),
       );
-      $form['general_settings']['nodesinblock_visibility_'. $i] = array(
+      $form['general_settings']['nodesinblock_visibility_' . $i] = array(
         '#type' => 'select',
-        '#title' => t('Visibility settings for block') .' '. $a,
+        '#title' => t('Visibility settings for block') . ' ' . $a,
         '#options' => array(
           t('Show on every page except the listed pages.'),
           t('Show on only the listed pages.')
         ),
-        '#default_value' => variable_get('nodesinblock_visibility_'. $i, '1'),
+        '#default_value' => variable_get('nodesinblock_visibility_' . $i, '1'),
       );
     }
 
@@ -76,36 +76,36 @@ function nodesinblock_settings() {
     // Iterate over selected types
     foreach ($saved_types as $key => $value) {
       if ($value != '0') {
-        $form['contenttypes_block']['nodesinblock_'. $key .'_block'] = array(
+        $form['contenttypes_block']['nodesinblock_' . $key . '_block'] = array(
           '#type' => 'checkboxes',
           '#title' => t('Blocks'),
           '#options' => $block_options,
-          '#default_value' => variable_get('nodesinblock_'. $key .'_block', array()),
-          '#prefix' => '<div style="float: left; padding:5px; margin-right: 10px; border: 1px solid #cccccc;"> <strong>'. t('Configure @key', array('@key' => $key)) .'</strong>',
+          '#default_value' => variable_get('nodesinblock_' . $key . '_block', array()),
+          '#prefix' => '<div style="float: left; padding:5px; margin-right: 10px; border: 1px solid #cccccc;"> <strong>' . t('Configure @key', array('@key' => $key)) . '</strong>',
         );
 
-        $form['contenttypes_block']['nodesinblock_'. $key .'_label'] = array(
+        $form['contenttypes_block']['nodesinblock_' . $key . '_label'] = array(
           '#type' => 'textfield',
           '#title' => t('Fieldset label'),
-          '#default_value' => check_plain(variable_get('nodesinblock_'. $key .'_label', t('Nodes in block'))),
+          '#default_value' => check_plain(variable_get('nodesinblock_' . $key . '_label', t('Nodes in block'))),
           '#size' => 20,
         );
-        $form['contenttypes_block']['nodesinblock_'. $key .'_collapsed'] = array(
+        $form['contenttypes_block']['nodesinblock_' . $key . '_collapsed'] = array(
           '#type' => 'checkbox',
           '#title' => t('Collapsed fieldset'),
-          '#default_value' => variable_get('nodesinblock_'. $key .'_collapsed', TRUE),
+          '#default_value' => variable_get('nodesinblock_' . $key . '_collapsed', TRUE),
         );
-        $form['contenttypes_block']['nodesinblock_'. $key .'_collapsible'] = array(
+        $form['contenttypes_block']['nodesinblock_' . $key . '_collapsible'] = array(
           '#type' => 'checkbox',
           '#title' => t('Collapsible fieldset'),
-          '#default_value' => variable_get('nodesinblock_'. $key .'_collapsible', TRUE),
+          '#default_value' => variable_get('nodesinblock_' . $key . '_collapsible', TRUE),
         );
         $options = array(0 => t('Let the user decide'));
         $options += _nodesinblock_render_status(0);
-        $form['contenttypes_block']['nodesinblock_'. $key .'_render'] = array(
+        $form['contenttypes_block']['nodesinblock_' . $key . '_render'] = array(
           '#type' => 'select',
           '#title' => t('Render mode'),
-          '#default_value' => variable_get('nodesinblock_'. $key .'_render', 0),
+          '#default_value' => variable_get('nodesinblock_' . $key . '_render', 0),
           '#options' => $options,
           '#suffix' => '</div>',
         );
@@ -152,7 +152,7 @@ function nodesinblock_settings_save($form, &$form_state) {
  * Submit callback: clear settings, simply redirects to confirmation page.
  */
 function nodesinblock_settings_clear_redirect($form, &$form_state) {
-  $form_state['redirect'] = 'admin/settings/nodesinblock/clear';
+  $form_state['redirect'] = 'admin/config/nodesinblock/clear';
 }
 
 /**
@@ -163,7 +163,7 @@ function nodesinblock_settings_clear_confirm() {
   return confirm_form(
     $form,
     t('Do you want to clear the settings for nodes in block?'),
-    'admin/settings/nodesinblock',
+    'admin/config/nodesinblock',
     t('Warning, you will loose all settings including all entries in the nodesinblock table and the blocks generated by your previous configuration.'),
     t('Clear configuration'), t('Cancel')
   );
@@ -178,7 +178,7 @@ function nodesinblock_settings_clear_confirm_submit($form, &$form_state) {
   db_query("TRUNCATE {nodesinblock}");
   cache_clear_all('variables', 'cache');
   drupal_set_message(t('All nodes in block settings have been cleared'));
-  $form_state['redirect'] = 'admin/settings/nodesinblock';
+  $form_state['redirect'] = 'admin/config/nodesinblock';
 }
 
 /**
@@ -199,11 +199,11 @@ function nodesinblock_queue($form_state, $block = NULL, $show_block_links = TRUE
   if ($show_block_links == TRUE) {
     $blocklinks = array();
     for ($i = 0, $a = 1; $i < $number_of_blocks; $i++, $a++) {
-      $title = check_plain(variable_get('nodesinblock_friendlyname_'. $i, t('Nodes in block '. $a)));
-      $delta = ($i != '0') ? '/'. $i : '';
+      $title = check_plain(variable_get('nodesinblock_friendlyname_' . $i, t('Nodes in block ' . $a)));
+      $delta = ($i != '0') ? '/' . $i : '';
       $blocklinks[] = array(
         'title' => $title,
-        'href' => 'admin/settings/nodesinblock/queue'. $delta
+        'href' => 'admin/config/nodesinblock/queue' . $delta
       );
     }
     $form['blocklinks'] = array('#type' => 'item', '#value' => theme('links', $blocklinks));
@@ -215,11 +215,11 @@ function nodesinblock_queue($form_state, $block = NULL, $show_block_links = TRUE
     $saved_delta = $block + 1;
     $saved_types = variable_get('nodesinblock_contenttypes', array());
     foreach ($saved_types as $type) {
-      $deltas = variable_get('nodesinblock_'. $type .'_block', array());
+      $deltas = variable_get('nodesinblock_' . $type . '_block', array());
       if (isset($deltas[$saved_delta]) && $deltas[$saved_delta] != 0) {
         $createlinks[] = array(
           'title' => t('Create new @type', array('@type' => $type)),
-          'href' => 'node/add/'. $type,
+          'href' => 'node/add/' . $type,
         );
       }
     }
@@ -289,10 +289,10 @@ function theme_nodesinblock_queue($form) {
     $row[] = drupal_render($element['node_status']);
     $row[] = drupal_render($element['visibility']);
     $row[] = drupal_render($element['weight']);
-    $row[] = l(t('View'), 'node/'. $nid) .' - '. l(t('Edit'), 'node/'. $nid .'/edit', array('query' => drupal_get_destination()));
+    $row[] = l(t('View'), 'node/' . $nid) . ' - ' . l(t('Edit'), 'node/' . $nid . '/edit', array('query' => drupal_get_destination()));
 
     $row = array_merge(array('data' => $row), array());
-    $row['class'] = !empty($row['class']) ? $row['class'] .' draggable' : 'draggable';
+    $row['class'] = !empty($row['class']) ? $row['class'] . ' draggable' : 'draggable';
     $rows[] = $row;
   }
 

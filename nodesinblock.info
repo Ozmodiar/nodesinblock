@@ -1,5 +1,10 @@
 ; $Id$
 name = Nodes in block
 description = "Use nodes as content in one or more regions."
-core = 6.x
+core = 7.x
 version = VERSION
+dependencies[] = block
+files[] = nodesinblock.module 
+files[] = nodesinblock.install
+files[] = nodesinblock.admin.inc
+files[] = nodesinblock.test

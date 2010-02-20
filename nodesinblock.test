@@ -8,7 +8,7 @@
 
 class NodesInBlock extends DrupalWebTestCase {
   /**
-   * Implementation of getInfo().
+   * Implements getInfo().
    */
   function getInfo() {
     return array(
@@ -19,19 +19,10 @@ class NodesInBlock extends DrupalWebTestCase {
   }
 
   /**
-   * Implementation of setUp().
+   * Implements setUp().
    */
   function setUp() {
     parent::setUp('nodesinblock');
-  }
-
-  /**
-   * Debug helper function. Writes values away to a text file in the files directory.
-   */
-  function _debugHelper($value, $writetype = 'a+') {
-    $debug = fopen($this->originalFileDirectory .'/simpletestdebug.txt', 'a+');
-    fwrite($debug, print_r($value, TRUE) ."\n");
-    fclose($debug);
   }
 
   /**
@@ -72,19 +63,19 @@ class NodesInBlock extends DrupalWebTestCase {
    * Helper function to create a node with standard settings.
    */
   function _createNode($type, $nid = 1, $region = 0, $vis = '*') {
-    $edit = array('title' => 'Title '. $nid, 'body' => 'Text '. $nid, 'nodesinblock_delta' => $region, 'nodesinblock_visibility' => $vis, 'nodesinblock_render' => NIB_RENDER_PAGE_WITH_LINKS);
-    $this->drupalPost('node/add/'. $type, $edit, t('Save'));
+    $edit = array('title' => 'Title ' . $nid, 'body' => 'Text ' . $nid, 'nodesinblock_delta' => $region, 'nodesinblock_visibility' => $vis, 'nodesinblock_render' => NIB_RENDER_PAGE_WITH_LINKS);
+    $this->drupalPost('node/add/' . $type, $edit, t('Save'));
     $result = db_result(db_query("SELECT nid FROM {nodesinblock} WHERE nid = %d", $nid));
-    $this->assertTrue($result, 'Node '. $nid .' saved in nodesinblock table', 'Node submission');
+    $this->assertTrue($result, 'Node ' . $nid . ' saved in nodesinblock table', 'Node submission');
   }
 
   /**
    * Helper function to update an existing node.
    */
   function _updateNode($nid = 1, $edit = array()) {
-    $this->drupalPost('node/'. $nid .'/edit', $edit, t('Save'));
+    $this->drupalPost('node/' . $nid . '/edit', $edit, t('Save'));
     $result = db_result(db_query("SELECT nid FROM {nodesinblock} WHERE nid = %d", $nid));
-    $this->assertTrue($result, 'Node '. $nid .' updated in nodesinblock table', 'Node submission');
+    $this->assertTrue($result, 'Node ' . $nid . ' updated in nodesinblock table', 'Node submission');
   }
 
   /**
