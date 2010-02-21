@@ -31,7 +31,7 @@ function nodesinblock_perm() {
 function nodesinblock_theme() {
   return array(
     'nodesinblock_queue' => array(
-      'variables' => array('form' => NULL),
+      'render element' => 'form',
     ),
   );
 }
@@ -272,7 +272,7 @@ function nodesinblock_nodequeue_access($node) {
  */
 function nodesinblock_nodequeue($node) {
   module_load_include('inc', 'nodesinblock', 'nodesinblock.admin');
-  return drupal_get_form('nodesinblock_queue', $node->nodesinblock, FALSE, FALSE);
+  return drupal_render(drupal_get_form('nodesinblock_queue', $node->nodesinblock, FALSE, FALSE));
 }
 
 /**
