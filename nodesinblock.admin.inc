@@ -276,8 +276,6 @@ function nodesinblock_queue_submit($form, &$form_state) {
         'weight' => $node['weight'],
       ))
       ->execute();
-      //db_query("UPDATE {nodesinblock} set weight = %d WHERE delta = %d AND nid = %d",
-      //$node['weight'], $form_state['values']['delta'], $node['nid']);
   }
 }
 

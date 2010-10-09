@@ -21,7 +21,10 @@ function nodesinblock_perm() {
     ),
     'administer nodes in block queue' => array(
       'title' => t('Administer nodes in block queue'),
-    )
+    ),
+    'deny configuration on node form' => array(
+      'title' => t('Deny configuration on node form')
+    ),
   );
 }
 
@@ -205,8 +208,10 @@ function nodesinblock_node_update($node) {
  */
 function nodesinblock_node_delete() {
   _nodeisblock_load($node);
-  $node->nodesinblock_delta = $node->nodesinblock;
-  _nodesinblock_save($node, 'delete');
+  if (isset($node->nodesinblock_delta)) {
+    $node->nodesinblock_delta = $node->nodesinblock;
+    _nodesinblock_save($node, 'delete');
+  }
 }
 
 /**
@@ -390,7 +395,7 @@ function _nodesinblock_show($delta, $visibility) {
   ";
   // @todo what with db_rewrite_sql ?
 //  $result = db_query(db_rewrite_sql($query), $delta);
-  $result = db_query($query, array(':delta' => $delta));
+  $result = db_query($query, array(':delta' => $delta))->fetchAll();
 
   foreach ($result as $row) {
     $paths = explode("\n", trim($row->visibility));
