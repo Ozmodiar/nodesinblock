@@ -56,20 +56,20 @@ function nodesinblock_menu() {
     'type' => MENU_LOCAL_TASK,
     'weight' => 2,
   );
-  $items['admin/config/nodesinblock'] = array(
+  $items['admin/structure/nodesinblock'] = array(
     'title' => 'Nodes in block',
-    'description' => 'Configure settings for nodes in block. ',
+    'description' => 'Setup nodes in block. ',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('nodesinblock_settings'),
     'access arguments' => array('administer nodes in block configuration'),
     'file' => 'nodesinblock.admin.inc',
   );
-  $items['admin/config/nodesinblock/default'] = array(
-    'title' => 'Configuration',
-    'description' => 'Configure settings for node in block. ',
+  $items['admin/structure/nodesinblock/default'] = array(
+    'title' => 'Configure',
+    'description' => 'Configure node in block. ',
     'type' => MENU_DEFAULT_LOCAL_TASK
   );
-  $items['admin/config/nodesinblock/queue'] = array(
+  $items['admin/structure/nodesinblock/queue'] = array(
     'title' => 'Queue',
     'description' => 'Nodes in block queue. ',
     'page callback' => 'drupal_get_form',
@@ -78,7 +78,7 @@ function nodesinblock_menu() {
     'file' => 'nodesinblock.admin.inc',
     'type' => MENU_LOCAL_TASK,
   );
-  $items['admin/config/nodesinblock/clear'] = array(
+  $items['admin/structure/nodesinblock/clear'] = array(
     'title' => 'Clear settings',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('nodesinblock_settings_clear_confirm'),

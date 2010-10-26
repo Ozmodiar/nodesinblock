@@ -17,11 +17,11 @@ Installation:
 -------------
 1. Place this module directory in your modules folder 
    (this will usually be "sites/all/modules/").
-2. Go to "administer -> build -> modules" and enable the module.
+2. Go to "administer -> modules" and enable the module.
 
 Configuration:
 --------------
-Go to "administer -> settings -> nodesinblock" 
+Go to "administer -> structure -> nodesinblock" 
 
 Select how many blocks you want and which content types will benefit from this feature. 
 After submitting this, two fieldsets will become available where you can change the block 
