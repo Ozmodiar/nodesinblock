@@ -50,7 +50,7 @@ function nodesinblock_schema() {
       ),
       'render' => array(
         'type' => 'varchar',
-        'length' => 20,
+        'length' => 40,
         'not null' => TRUE,
         'default' => '',
         'description' => 'Render type of node in block, teaser, page or a nd string.',
@@ -91,4 +91,11 @@ function nodesinblock_update_6003() {
   db_drop_field($ret, 'nodesinblock', 'status');
   db_change_field($ret, 'nodesinblock', 'render', 'render', array('type' => 'varchar', 'not null' => TRUE, 'length' => 20, 'default' => ''));
   return $ret;
+}
+
+/**
+ * Update 7001: Make the render field a bit bigger.
+ */
+function nodesinblock_update_7001() {
+  db_change_field('nodesinblock', 'render', 'render', array('type' => 'varchar', 'not null' => TRUE, 'length' => 40, 'default' => ''));
 }

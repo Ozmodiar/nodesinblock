@@ -13,7 +13,10 @@ Drupal.behaviors.nodesinblockFieldsetSummaries = {
 
       // Render mode.
       if (nib_region != Drupal.t('None')) {
-        vals.push($("select[name='nodesinblock_render'] option:selected", context).text());
+        var render_type = $("select[name='nodesinblock_render'] option:selected", context).text();
+        if (render_type) {
+          vals.push(render_type);
+        }
       }
         
       return Drupal.checkPlain(vals.join(', '));

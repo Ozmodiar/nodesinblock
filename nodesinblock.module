@@ -6,15 +6,10 @@
  * Nodes in block makes it possible to add multiple nodes in one block.
  */
 
-define('NIB_RENDER_TEASER_WITH_LINKS', '1');
-define('NIB_RENDER_PAGE_WITH_LINKS', '2');
-define('NIB_RENDER_TEASER_WITHOUT_LINKS', '3');
-define('NIB_RENDER_PAGE_WITHOUT_LINKS', '4');
-
 /**
- * Implements hook_perm().
+ * Implements hook_permission().
  */
-function nodesinblock_perm() {
+function nodesinblock_permission() {
   return array(
     'administer nodes in block configuration' => array(
       'title' => t('Configure Nodes in block'),
@@ -113,7 +108,7 @@ function nodesinblock_form_node_form_alter(&$form, $form_state) {
 
     if (!empty($block_options)) {
 
-      $node_info = array('weight' => 0, 'visibility' => '*', 'delta' => -1, 'render' => NIB_RENDER_PAGE_WITHOUT_LINKS);
+      $node_info = array('weight' => 0, 'visibility' => '*', 'delta' => -1, 'render' => 'full');
 
       if (!empty($form_state['values']) && isset($form_state['values']['nodesinblock_visibility'])) {
         $node_info['visibility'] = $form_state['values']['nodesinblock_visibility'];
@@ -150,13 +145,15 @@ function nodesinblock_form_node_form_alter(&$form, $form_state) {
         '#weight' => 40,
       );
 
+      $nodesinblock_enable = TRUE;
       if (user_access('deny configuration on node form') && $GLOBALS['user']->uid != 1) {
+        $nodesinblock_enable = FALSE;
         $form['nodesinblock']['#access'] = FALSE;
       }
 
       $form['nodesinblock']['nodesinblock_enable'] = array(
         '#type' => 'value',
-        '#value' => 1,
+        '#value' => $nodesinblock_enable,
       );
 
       $form['nodesinblock']['nodesinblock_delta'] = array(
@@ -175,7 +172,7 @@ function nodesinblock_form_node_form_alter(&$form, $form_state) {
       $form['nodesinblock']['nodesinblock_render'] = array(
         '#type' => 'select',
         '#title' => t('Render node as'),
-        '#options' => _nodesinblock_render_status(0),
+        '#options' => _nodesinblock_render_options(),
         '#default_value' => $node_info['render']
       );
       if (variable_get('nodesinblock_' . $node->type . '_render', '0') != '0') {
@@ -223,9 +220,9 @@ function nodesinblock_node_update($node) {
 /**
  * Implements hook_node_delete().
  */
-function nodesinblock_node_delete() {
+function nodesinblock_node_delete($node) {
   _nodeisblock_load($node);
-  if (isset($node->nodesinblock_delta)) {
+  if (isset($node->nodesinblock)) {
     $node->nodesinblock_delta = $node->nodesinblock;
     _nodesinblock_save($node, 'delete');
   }
@@ -249,9 +246,11 @@ function nodesinblock_block_info() {
  */
 function nodesinblock_block_view($delta = '') {
   $a = $delta + 1;
+
+  $content = _nodesinblock_show($delta, variable_get('nodesinblock_visibility_' . $delta, '1'));
   $block = array(
     'subject' => check_plain(variable_get('nodesinblock_friendlyname_' . $delta, t('Nodes in block ' . $a))),
-    'content' => _nodesinblock_show($delta, variable_get('nodesinblock_visibility_' . $delta, '1')),
+    'content' => $content,
   );
   return $block;
 }
@@ -314,46 +313,29 @@ function _nodesinblock_validate($node) {
 /**
  * Helper function to return the status.
  *
- * @param $status
- *   The current status of a node.
- * @param $return
- *   Whether to return the complete array or a string.
- * @return $mixed
- *   String or array. Complete array or Human name of render status.
+ * @param $type
+ *   The name of the bundle.
+ * @return $render_status
+ *   Colleciton of view modes.
  */
-function _nodesinblock_render_status($status, $return = FALSE) {
-  $render_states = array(
-    NIB_RENDER_TEASER_WITH_LINKS => t('Teaser with links'),
-    NIB_RENDER_TEASER_WITHOUT_LINKS => t('Teaser without links'),
-    NIB_RENDER_PAGE_WITH_LINKS => t('Page with links'),
-    NIB_RENDER_PAGE_WITHOUT_LINKS => t('Page without links')
-  );
+function _nodesinblock_render_options() {
+  static $render_options = array();
 
-  // Node Displays support.
-  if (module_exists('nd')) {
-    $render_states = array();
-    if (function_exists('ds_get_build_modes')) {
-      $build_modes = ds_get_build_modes('nd');
-      foreach ($build_modes as $key => $build_mode) {
-        $render_states[$key] = $build_mode['title'];
-      }
-    }
-    else {
-      $build_modes = nd_get_build_modes();
-      foreach ($build_modes as $key => $build_mode) {
-        $render_states[$key] = $build_mode['build modes'][$key]['title'];
-      }
+  if (empty($render_options)) {
+    $entity_info = entity_get_info();
+    foreach ($entity_info['node']['view modes'] as $key => $view_mode) {
+      $render_options[$key . ':' . TRUE] = $view_mode['label'] . ' ' . t('With links');
+      $render_options[$key . ':'. FALSE] = $view_mode['label'] . ' ' . t('Without links');
     }
   }
 
-  if ($return == TRUE) return $render_states[$status];
-  else return $render_states;
+  return $render_options;
 }
 
 /**
  * Helper function to load node data for nodesinblock.
  */
-function _nodeisblock_load(&$node) {
+function _nodeisblock_load($node) {
   $delta = db_query("SELECT delta, nid FROM {nodesinblock} WHERE nid = :nid", array(':nid' => $node->nid))->fetchObject();
   if (isset($delta->nid)) {
     $node->nodesinblock = $delta->delta;
@@ -437,43 +419,25 @@ function _nodesinblock_show($delta, $visibility) {
       if ($page_match && !isset($nids[$delta][$row->nid])) {
         $nids[$delta][$row->nid] = $row->nid;
         $node = node_load($row->nid);
-        $node->nodesinblock = 1;
+        $node->nodesinblock = TRUE;
 
         // Assemble classes.
         $classes = array('nodesinblock');
-        if ($i == 0) {
-          $classes[] = 'first';
-        }
-
-        if ($i == $num_items - 1) {
-          $classes[] = 'last';
-        }
-
-        if ($i %2 == 0) {
-          $classes[] = 'odd';
-        }
-        else {
-          $classes[] = 'even';
-        }
-
+        if ($i == 0) $classes[] = 'first';
+        if ($i == $num_items - 1) $classes[] = 'last';
+        if ($i %2 == 0) $classes[] = 'odd'; else $classes[] = 'even';
         $i++;
 
-        $output .= '<div class="'. implode(' ', $classes) .'" id="nodesinblock-'. $node->nid .'">';
+        // Render node.
+        list($view_mode, $links) = explode(':', $row->render);
+        $node_content = node_view($node, $view_mode);
+        if (!$links) {
+          unset($node_content['links']);
+        }
 
-        // Support for Node Displays module.
-        if (module_exists('nd')) {
-          // @todo revise with nd, build_mode isn't necessary probably.
-          $node->build_mode = $row->render;
-          $output .= node_view($node, $row->render);
-        }
-        else {
-          // @todo what with links ?
-          // @todo use render ?
-          $links = FALSE;
-          if ($row->render == NIB_RENDER_PAGE_WITH_LINKS || $row->render == NIB_RENDER_TEASER_WITH_LINKS) $links = TRUE;
-          $view_mode = ($row->render == NIB_RENDER_TEASER_WITH_LINKS || $row->render == NIB_RENDER_TEASER_WITHOUT_LINKS) ? 'teaser' : 'full';
-          $output .= render(node_view($node, $view_mode));
-        }
+        // Return output.
+        $output .= '<div class="'. implode(' ', $classes) .'" id="nodesinblock-'. $node->nid .'">';
+        $output .= render($node_content);
         $output .= '</div>';
       }
     }

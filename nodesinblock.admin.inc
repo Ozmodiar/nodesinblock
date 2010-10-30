@@ -76,7 +76,7 @@ function nodesinblock_settings() {
     $form['contenttypes_block'] = array(
       '#type' => 'fieldset',
       '#title' => t('Settings per content type'),
-      '#description' => t('Define per content type which blocks are available. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed. You can also choose the label of the fieldset and if it is collapsible and/or collapsed by default. Finally, you can set a default render mode for the node. If you choose one, the select box on the node form will be hidden.'),
+      '#description' => t('Define per content type which blocks are available. On the content node form, a select box will be available to select the appropriate block where the node content must be displayed. You can also choose the label of the fieldset and if it is collapsible and/or collapsed by default. You can set a default render mode for the node. If you choose one, the select box on the node form will be hidden.'),
     );
 
     // Iterate over selected types
@@ -87,7 +87,7 @@ function nodesinblock_settings() {
           '#title' => t('Blocks'),
           '#options' => $block_options,
           '#default_value' => variable_get('nodesinblock_' . $key . '_block', array()),
-          '#prefix' => '<div style="float: left; padding:5px; margin-right: 10px; border: 1px solid #cccccc;"> <strong>' . t('Configure @key', array('@key' => $key)) . '</strong>',
+          '#prefix' => '<div style="float: left; padding:5px; margin: 10px 5px 10px 0px; border: 1px solid #cccccc;"> <strong>' . t('Configure @key', array('@key' => $key)) . '</strong>',
         );
 
         $form['contenttypes_block']['nodesinblock_' . $key . '_label'] = array(
@@ -107,7 +107,7 @@ function nodesinblock_settings() {
           '#default_value' => variable_get('nodesinblock_' . $key . '_collapsible', TRUE),
         );
         $options = array(0 => t('Let the user decide'));
-        $options += _nodesinblock_render_status(0);
+        $options += _nodesinblock_render_options();
         $form['contenttypes_block']['nodesinblock_' . $key . '_render'] = array(
           '#type' => 'select',
           '#title' => t('Render mode'),
