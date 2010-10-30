@@ -1,6 +1,6 @@
 Nodes in block
 --------------
-Requires Drupal 7
+Requires Drupal 7 and block module.
 
 Author: Kristof De Jaeger - http://drupal.org/user/107403
 
@@ -17,11 +17,11 @@ Installation:
 -------------
 1. Place this module directory in your modules folder 
    (this will usually be "sites/all/modules/").
-2. Go to "administer -> modules" and enable the module.
+2. Go to "administer -> build -> modules" and enable the module.
 
 Configuration:
 --------------
-Go to "administer -> structure -> nodesinblock" 
+Go to "administer -> settings -> nodesinblock" 
 
 Select how many blocks you want and which content types will benefit from this feature. 
 After submitting this, two fieldsets will become available where you can change the block 
@@ -38,8 +38,8 @@ You'll be better off choosing the default option.
 
 Theming
 -------
-Every node in the block can be rendered as a teaser or page. An extra property is also added to 
-the node object which you can use in your node template file to make theming even more easier:
+An extra property is added to the node object which you can use in your node 
+template file to make theming even more easier:
 
 <?php
 // node.tpl.php
@@ -50,10 +50,6 @@ else {
   // Normal theming
 }
 ?>
-
-Node Displays
--------------
-If ND is enabled (http://drupal.org/project/nd), the buildmodes are presented in the render select box.
 
 Support:
 --------

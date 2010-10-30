@@ -90,17 +90,17 @@ function nodesinblock_menu() {
 }
 
 /**
- * Implements hook_form_alter().
- * Add Nodes in block fieldset.
+ * Implements hook_form_BASE_FORM_ID_alter().
  */
-function nodesinblock_form_alter(&$form, $form_state, $form_id) {
+function nodesinblock_form_node_form_alter(&$form, $form_state) {
+  $node = $form['#node'];
   $saved_types = variable_get('nodesinblock_contenttypes', array());
-  if (isset($form['#node']) && $form['#node']->type . '_node_form' == $form_id && isset($saved_types[$form['#node']->type]) && $saved_types[$form['#node']->type] != '0') {
+  if (isset($saved_types[$node->type]) && $saved_types[$node->type] != '0') {
 
     $a = 1;
     $i = 0;
     $block_options[-1] = t('None');
-    $deltas = variable_get('nodesinblock_' . $form['#node']->type . '_block', array());
+    $deltas = variable_get('nodesinblock_' . $node->type . '_block', array());
     foreach ($deltas as $key => $value) {
       if ($deltas[$a] != 0) {
         $block_name = check_plain(variable_get('nodesinblock_friendlyname_' . $i, t('Nodes in block ' . $a)));
@@ -115,7 +115,7 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
 
       $node_info = array('weight' => 0, 'visibility' => '*', 'delta' => -1, 'render' => NIB_RENDER_PAGE_WITHOUT_LINKS);
 
-      if (!empty($form_state['values'])) {
+      if (!empty($form_state['values']) && isset($form_state['values']['nodesinblock_visibility'])) {
         $node_info['visibility'] = $form_state['values']['nodesinblock_visibility'];
         $node_info['weight'] = $form_state['values']['nodesinblock_weight'];
         $node_info['delta'] = $form_state['values']['nodesinblock_delta'];
@@ -125,15 +125,34 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         $node_info = db_query("SELECT * FROM {nodesinblock} WHERE nid = :nid", array(':nid' => $form['nid']['#value']))->fetchAssoc();
       }
       else {
+        if (variable_get('nodesinblock_referer', FALSE) && isset($_SERVER['HTTP_REFERER'])) {
+          $end = '';
+          if (substr($_SERVER['HTTP_REFERER'], -1) === '/') {
+            $end = '/';
+          }
+          $base = url(NULL, array('absolute' => TRUE)) . $end;
+          if (strpos($_SERVER['HTTP_REFERER'], $base) === 0) {
+            $node_info['visibility'] = str_replace($base, '', $_SERVER['HTTP_REFERER']);
+          }
+        }
         $node_info['render'] = '';
       }
 
       $form['nodesinblock'] = array(
         '#type' => 'fieldset',
-        '#title' => check_plain(variable_get('nodesinblock_' . $form['#node']->type . '_label', t('Nodes in block'))),
-        '#collapsible' => variable_get('nodesinblock_' . $form['#node']->type . '_collapsible', TRUE),
-        '#collapsed' => variable_get('nodesinblock_' . $form['#node']->type . '_collapsed', TRUE),
+        '#title' => check_plain(variable_get('nodesinblock_' . $node->type . '_label', t('Nodes in block'))),
+        '#collapsible' => variable_get('nodesinblock_' . $node->type . '_collapsible', TRUE),
+        '#collapsed' => variable_get('nodesinblock_' . $node->type . '_collapsed', TRUE),
+        '#group' => 'additional_settings',
+        '#attached' => array(
+          'js' => array(drupal_get_path('module', 'nodesinblock') . '/nodesinblock-node-form.js'),
+         ),
+        '#weight' => 40,
       );
+
+      if (user_access('deny configuration on node form') && $GLOBALS['user']->uid != 1) {
+        $form['nodesinblock']['#access'] = FALSE;
+      }
 
       $form['nodesinblock']['nodesinblock_enable'] = array(
         '#type' => 'value',
@@ -159,9 +178,9 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         '#options' => _nodesinblock_render_status(0),
         '#default_value' => $node_info['render']
       );
-      if (variable_get('nodesinblock_' . $form['#node']->type . '_render', '0') != '0') {
+      if (variable_get('nodesinblock_' . $node->type . '_render', '0') != '0') {
         $form['nodesinblock']['nodesinblock_render']['#type'] = 'value';
-        $form['nodesinblock']['nodesinblock_render']['#value'] = variable_get('nodesinblock_' . $form['#node']->type . '_render', 0);
+        $form['nodesinblock']['nodesinblock_render']['#value'] = variable_get('nodesinblock_' . $node->type . '_render', 0);
       }
 
       $form['nodesinblock']['nodesinblock_visibility'] = array(
@@ -169,8 +188,6 @@ function nodesinblock_form_alter(&$form, $form_state, $form_id) {
         '#type' => 'textarea',
         '#description' => t('Enter one page per line as Drupal paths. The \'*\' character is a wildcard. Example paths are blog for the blog page and blog/* for every personal blog. &lt;front&gt; is the front page.'),
         '#default_value' => $node_info['visibility'],
-        '#prefix' => '<div id="nodesinblock_visibility_textarea" style="display: ' . $display . '">',
-        '#suffix' => '</div>',
       );
     }
   }
@@ -242,8 +259,10 @@ function nodesinblock_block_view($delta = '') {
 /**
  * Tab title.
  *
- * @param stdClass $node The current node.
- * @return title.
+ * @param $node
+ *   The current node.
+ * @return $title
+ *   The title
  */
 function nodesinblock_tabtitle($node) {
   $i = $node->nodesinblock;
@@ -255,8 +274,10 @@ function nodesinblock_tabtitle($node) {
 /**
  * Access callback: check that user has access to configure nodes in block queue.
  *
- * @param stdClass $node The current node.
- * @return TRUE or FALSE
+ * @param $node
+ *   The current node.
+ * @return $boolean.
+ *   TRUE or FALSE
  */
 function nodesinblock_nodequeue_access($node) {
   _nodeisblock_load($node);
@@ -293,9 +314,12 @@ function _nodesinblock_validate($node) {
 /**
  * Helper function to return the status.
  *
- * @param integer $status The current status of a node.
- * @param boolean $return Whether to return the complete array or a string.
- * @return string or array Complete array or Human name of render status.
+ * @param $status
+ *   The current status of a node.
+ * @param $return
+ *   Whether to return the complete array or a string.
+ * @return $mixed
+ *   String or array. Complete array or Human name of render status.
  */
 function _nodesinblock_render_status($status, $return = FALSE) {
   $render_states = array(
@@ -382,22 +406,24 @@ function _nodesinblock_save($node, $op) {
  * Function callback: get content for a block.
  */
 function _nodesinblock_show($delta, $visibility) {
-
   static $nids = array();
 
+  $i = 0;
   $output = '';
   $path = drupal_get_path_alias($_GET['q']);
 
-  $query = "SELECT nib.nid, visibility, render FROM {nodesinblock} nib
-    LEFT JOIN {node} n on n.nid = nib.nid
-    WHERE n.status = 1 AND delta = :delta
-    ORDER BY weight
-  ";
-  // @todo what with db_rewrite_sql ?
-//  $result = db_query(db_rewrite_sql($query), $delta);
-  $result = db_query($query, array(':delta' => $delta))->fetchAll();
+  $query = db_select('nodesinblock', 'nib');
+  $query->join('node', 'n', 'nib.nid = n.nid');
+  $query->fields('nib', array('nid', 'visibility', 'render', 'weight'))
+  ->condition('n.status', 1)
+    ->condition('delta', $delta)
+    ->orderBy('weight', 'ASC')
+    ->addTag('node_access');
 
-  foreach ($result as $row) {
+  $results = $query->execute()->fetchAll();
+  $num_items = count($results);
+
+  foreach ($results as $row) {
     $paths = explode("\n", trim($row->visibility));
     foreach ($paths as $key => $val) {
       // Match the path.
@@ -412,7 +438,27 @@ function _nodesinblock_show($delta, $visibility) {
         $nids[$delta][$row->nid] = $row->nid;
         $node = node_load($row->nid);
         $node->nodesinblock = 1;
-        $output .= '<div class="nodesinblock" id="nodesinblock-' . $node->nid . '">';
+
+        // Assemble classes.
+        $classes = array('nodesinblock');
+        if ($i == 0) {
+          $classes[] = 'first';
+        }
+
+        if ($i == $num_items - 1) {
+          $classes[] = 'last';
+        }
+
+        if ($i %2 == 0) {
+          $classes[] = 'odd';
+        }
+        else {
+          $classes[] = 'even';
+        }
+
+        $i++;
+
+        $output .= '<div class="'. implode(' ', $classes) .'" id="nodesinblock-'. $node->nid .'">';
 
         // Support for Node Displays module.
         if (module_exists('nd')) {

@@ -31,6 +31,12 @@ function nodesinblock_settings() {
     '#options' =>  $content_types,
     '#default_value' => $saved_types,
   );
+  $form['nodesinblock']['nodesinblock_referer'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Use the referring page as the default value for <em>visibility</em> at the content node form'),
+    '#default_value' => variable_get('nodesinblock_referer', FALSE),
+    '#prefix' => '<strong>'. t('Creating and modifying blocks') .':</strong>',
+  );
 
   // Settings per block & content type.
   if (!empty($saved_types)) {
@@ -187,9 +193,12 @@ function nodesinblock_settings_clear_confirm_submit($form, &$form_state) {
 /**
  * Menu callback to look at the queue for nodes in block.
  *
- * @param integer $block The delta of the block.
- * @param integer $show_block_links Whether to render the blocklinks or not.
- * @param integer $show_create_links Whether to render the create node links or not.
+ * @param $block
+ *   The delta of the block.
+ * @param $show_block_links
+ *   Whether to render the blocklinks or not.
+ * @param $show_create_links
+ *   Whether to render the create node links or not.
  */
 function nodesinblock_queue($form, &$form_state, $block = NULL, $show_block_links = TRUE, $show_create_links = TRUE) {
   $form = array();
@@ -230,12 +239,16 @@ function nodesinblock_queue($form, &$form_state, $block = NULL, $show_block_link
   }
 
   // Get nodes and store them in #nodes key.
-  $query = "SELECT n.nid, n.title, n.status as node_status,
-  					nib.weight, nib.visibility FROM {nodesinblock} nib INNER JOIN {node} n
-  					on n.nid = nib.nid WHERE nib.delta = :delta ORDER BY weight ASC";
-  $result = db_query($query, array(':delta' => $block));
+  $query = db_select('nodesinblock', 'nib');
+  $query->join('node', 'n', 'nib.nid = n.nid');
+  $query->fields('nib', array('nid', 'visibility', 'render', 'weight'));
+  $query->fields('n', array('title', 'status'))
+    ->condition('delta', $block)
+    ->orderBy('weight', 'ASC');
 
-  foreach ($result as $row) {
+  $results = $query->execute()->fetchAll();
+
+  foreach ($results as $row) {
     $form['nodes'][$row->nid]['nid'] = array(
       '#type' => 'value',
       '#value' => $row->nid,
@@ -244,7 +257,7 @@ function nodesinblock_queue($form, &$form_state, $block = NULL, $show_block_link
       '#markup' => check_plain($row->title),
     );
     $form['nodes'][$row->nid]['node_status'] = array(
-      '#markup' => ($row->node_status == 1) ? t('published') : t('unpublished'),
+      '#markup' => ($row->status == 1) ? t('published') : t('unpublished'),
     );
     $form['nodes'][$row->nid]['visibility'] = array(
       '#markup' => htmlentities($row->visibility),
