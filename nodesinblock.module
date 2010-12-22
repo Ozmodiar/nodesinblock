@@ -185,6 +185,7 @@ function nodesinblock_form_node_form_alter(&$form, $form_state) {
         '#type' => 'textarea',
         '#description' => t('Enter one page per line as Drupal paths. The \'*\' character is a wildcard. Example paths are blog for the blog page and blog/* for every personal blog. &lt;front&gt; is the front page.'),
         '#default_value' => $node_info['visibility'],
+        '#wysiwyg' => FALSE,
       );
     }
   }
