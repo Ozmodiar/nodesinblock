@@ -249,8 +249,9 @@ function nodesinblock_block_view($delta = '') {
   $a = $delta + 1;
 
   $content = _nodesinblock_show($delta, variable_get('nodesinblock_visibility_' . $delta, '1'));
+  $title = check_plain(variable_get('nodesinblock_friendlyname_' . $delta, t('Nodes in block ' . $a)));
   $block = array(
-    'subject' => check_plain(variable_get('nodesinblock_friendlyname_' . $delta, t('Nodes in block ' . $a))),
+    'subject' => $title,
     'content' => $content,
   );
   return $block;
