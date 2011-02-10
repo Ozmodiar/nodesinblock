@@ -17,11 +17,11 @@ Installation:
 -------------
 1. Place this module directory in your modules folder 
    (this will usually be "sites/all/modules/").
-2. Go to "administer -> build -> modules" and enable the module.
+2. Go to "modules" (admin/modules) and enable the module.
 
 Configuration:
 --------------
-Go to "administer -> settings -> nodesinblock" 
+Go to "administer -> structure -> nodesinblock" 
 
 Select how many blocks you want and which content types will benefit from this feature. 
 After submitting this, two fieldsets will become available where you can change the block 
@@ -30,7 +30,7 @@ and assign one or more blocks to a region.
 
 On the node form, you can choose the region, render mode (depending on your settings)
 and the visibility of the node. Weight and status of the node in the block can be altered
-by visiting administer -> settings -> nodesinblock -> queue.
+by visiting administer -> structure -> nodesinblock -> queue.
 
 If you set the visibility setting for the block as "Show on every page except the listed pages", 
 multiple paths will not work correct because of the way that Drupal core block visibility works. 
