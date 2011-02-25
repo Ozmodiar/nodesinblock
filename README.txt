@@ -58,4 +58,3 @@ file support and feature requests, bugs etc. Be as descriptive as you can.
 
 Last updated:
 ------------
-; $Id$
