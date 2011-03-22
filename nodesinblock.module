@@ -422,6 +422,12 @@ function _nodesinblock_show($delta, $visibility) {
         $node = node_load($row->nid);
         $node->nodesinblock = TRUE;
 
+        // In case the the render selection has changed, make sure
+        // we select the exact render mode.
+        if (variable_get('nodesinblock_'. $node->type .'_render', '0') != '0') {
+          $row->render = variable_get('nodesinblock_'. $node->type .'_render', '0');
+        }
+
         // Assemble classes.
         $classes = array('nodesinblock');
         if ($i == 0) $classes[] = 'first';
