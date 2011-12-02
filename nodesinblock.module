@@ -421,6 +421,17 @@ function _nodesinblock_show($delta, $visibility) {
       if ($page_match && !isset($nids[$delta][$row->nid])) {
         $nids[$delta][$row->nid] = $row->nid;
         $node = node_load($row->nid);
+
+        // Support for translation. Use Translation Helpers module if it's installed.
+        // @todo Provide granular control. Maybe we want to show nodes of language x in a block which gets
+        //   displayed on language y. This might break other contexts (i.e. show blocks on language)
+        if (function_exists('translation_helpers_get_translation')) {
+          $tnode = translation_helpers_get_translation($node, $language->language);
+          if ($tnode) {
+            $node = $tnode;
+          }
+        }
+
         $node->nodesinblock = TRUE;
 
         // In case the the render selection has changed, make sure
