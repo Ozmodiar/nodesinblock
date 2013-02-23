@@ -1,3 +1,7 @@
+Changes made
+------------
+- Issue #1613260 by ekoedmedia: Missing Weight on Nodes in Block Page (http://drupal.org/node/1613260).
+
 Nodes in block
 --------------
 Requires Drupal 7 and block module.
@@ -41,7 +45,6 @@ Theming
 An extra property is added to the node object which you can use in your node 
 template file to make theming even more easier:
 
-<?php
 // node.tpl.php
 if (isset($node->nodesinblock)) {
   // Theming for node in block
@@ -49,12 +52,8 @@ if (isset($node->nodesinblock)) {
 else {
   // Normal theming
 }
-?>
 
 Support:
 --------
 Please use the issue queue available at http://drupal.org/project/nodesinblock to
 file support and feature requests, bugs etc. Be as descriptive as you can.
-
-Last updated:
-------------
