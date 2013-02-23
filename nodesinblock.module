@@ -164,8 +164,11 @@ function nodesinblock_form_node_form_alter(&$form, $form_state) {
       );
 
       $form['nodesinblock']['nodesinblock_weight'] = array(
-        '#type' => 'value',
-        '#value' => $node_info['weight']
+        '#type' => 'weight',
+        '#title' => t('Weight'),
+        '#default_value' => $node_info['weight'],
+        '#delta' => 30,
+        '#description' => t('Where the node is positioned in the block.'),
       );
 
       $form['nodesinblock']['nodesinblock_render'] = array(
