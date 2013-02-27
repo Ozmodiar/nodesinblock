@@ -56,9 +56,9 @@ class NodesInBlockTestCase extends DrupalWebTestCase {
     variable_set('nodesinblock_nrofblocks', '3');
 
     $this->drupalGet('admin/structure/block');
-    db_query("UPDATE {block} set status = 1, region = 'sidebar_second' where delta = 0 AND module = 'nodesinblock'");
-    db_query("UPDATE {block} set status = 1, region = 'sidebar_second' where delta = 1 AND module = 'nodesinblock'");
-    db_query("UPDATE {block} set status = 1, region = 'sidebar_second' where delta = 2 AND module = 'nodesinblock'");
+    db_query("UPDATE {block} set status = 1, region = 'sidebar_second' where delta = '0' AND module = 'nodesinblock'");
+    db_query("UPDATE {block} set status = 1, region = 'sidebar_second' where delta = '1' AND module = 'nodesinblock'");
+    db_query("UPDATE {block} set status = 1, region = 'sidebar_second' where delta = '2' AND module = 'nodesinblock'");
   }
 
   /**
