@@ -64,12 +64,13 @@ class NodesInBlockTestCase extends DrupalWebTestCase {
   /**
    * Helper function to create a node with standard settings.
    */
-  function _createNode($type, $nid = 1, $region = 0, $vis = '*', $nib = TRUE) {
+  function _createNode($type, $nid = 1, $region = 0, $vis = '*', $weight = 0, $nib = TRUE) {
     $edit = array('title' => 'Title ' . $nid, 'body[und][0][value]' => 'Text ' . $nid);
     if ($nib) {
       $edit['nodesinblock_delta'] = $region;
       $edit['nodesinblock_visibility'] = $vis;
       $edit['nodesinblock_render'] = 'full:1';
+      $edit['nodesinblock_weight'] = $weight;
     }
     $this->drupalPost('node/add/' . $type, $edit, t('Save'));
     if ($nib) {
@@ -102,10 +103,10 @@ class NodesInBlockTestCase extends DrupalWebTestCase {
     $this->_setNodesinblockConfiguration();
 
     // Create an article on the front page.
-    $this->_createNode('article', 1, '', '', FALSE);
+    $this->_createNode('article', 1, '', '', 0, FALSE);
 
     // Created a first node.
-    $this->_createNode('page', 2);
+    $this->_createNode('page', 2, '0', '*', 1);
     $this->assertRaw('Nodes in block 1', 'Nodes in block 1 queue found');
 
     // Should show up everywhere.
