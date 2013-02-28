@@ -64,13 +64,14 @@ class NodesInBlockTestCase extends DrupalWebTestCase {
   /**
    * Helper function to create a node with standard settings.
    */
-  function _createNode($type, $nid = 1, $region = 0, $vis = '*', $weight = 0, $nib = TRUE) {
+  function _createNode($type, $nid = 1, $region = 0, $vis = '*', $weight = 0, $css_class = '', $nib = TRUE) {
     $edit = array('title' => 'Title ' . $nid, 'body[und][0][value]' => 'Text ' . $nid);
     if ($nib) {
       $edit['nodesinblock_delta'] = $region;
       $edit['nodesinblock_visibility'] = $vis;
       $edit['nodesinblock_render'] = 'full:1';
       $edit['nodesinblock_weight'] = $weight;
+      $edit['nodesinblock_css_class'] = $css_class;
     }
     $this->drupalPost('node/add/' . $type, $edit, t('Save'));
     if ($nib) {
@@ -103,10 +104,10 @@ class NodesInBlockTestCase extends DrupalWebTestCase {
     $this->_setNodesinblockConfiguration();
 
     // Create an article on the front page.
-    $this->_createNode('article', 1, '', '', 0, FALSE);
+    $this->_createNode('article', 1, '', '', 0, '', FALSE);
 
     // Created a first node.
-    $this->_createNode('page', 2, '0', '*', 1);
+    $this->_createNode('page', 2, '0', '*', 1, 'nib-class');
     $this->assertRaw('Nodes in block 1', 'Nodes in block 1 queue found');
 
     // Should show up everywhere.
@@ -114,6 +115,9 @@ class NodesInBlockTestCase extends DrupalWebTestCase {
     $this->assertRaw('Text 2', 'Title 2 node found');
     $this->drupalGet('node');
     $this->assertRaw('Text 2', 'Title 2 node found');
+
+    // Check if the block contains the correct class.
+    $this->assertFieldByXPath('//div[@id="nodesinblock-2" and contains(@class, "nib-class")]', TRUE, "Nodes in block 1 contains the provided CSS class.");
 
     // Update node to show only up on frontpage.
     $this->_updateNode('2', array('nodesinblock_visibility' => '<front>'));
