@@ -1,5 +1,6 @@
-Changes made
-------------
+Changelog
+---------
+- Issue #1923948 by Ozmodiar: Add custom CSS class support (http://drupal.org/node/1923948).
 - Issue #1613260 by ekoedmedia: Missing Weight on Nodes in Block Page (http://drupal.org/node/1613260).
 
 Nodes in block

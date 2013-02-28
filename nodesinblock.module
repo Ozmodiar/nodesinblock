@@ -107,13 +107,14 @@ function nodesinblock_form_node_form_alter(&$form, $form_state) {
 
     if (!empty($block_options)) {
 
-      $node_info = array('weight' => 0, 'visibility' => '*', 'delta' => -1, 'render' => 'full');
+      $node_info = array('weight' => 0, 'visibility' => '*', 'delta' => -1, 'render' => 'full', 'css_class' => '');
 
       if (!empty($form_state['values']) && isset($form_state['values']['nodesinblock_visibility'])) {
         $node_info['visibility'] = $form_state['values']['nodesinblock_visibility'];
         $node_info['weight'] = $form_state['values']['nodesinblock_weight'];
         $node_info['delta'] = $form_state['values']['nodesinblock_delta'];
         $node_info['render'] = $form_state['values']['nodesinblock_render'];
+        $node_info['css_class'] = $form_state['values']['nodesinblock_css_class'];
       }
       elseif (!empty($form['nid']['#value'])) {
         $node_info = db_query("SELECT * FROM {nodesinblock} WHERE nid = :nid", array(':nid' => $form['nid']['#value']))->fetchAssoc();
@@ -161,6 +162,14 @@ function nodesinblock_form_node_form_alter(&$form, $form_state) {
         '#options' => $block_options,
         '#default_value' => $node_info['delta'],
         '#description' => t('The code between the round brackets indicate the visibility setting of the block.<br />Pos = Show on only the listed pages.<br />Neg = Show on every page except the listed pages.'),
+      );
+
+      $form['nodesinblock']['nodesinblock_css_class'] = array(
+        '#type' => 'textfield',
+        '#title' => t('CSS class(es)'),
+        '#default_value' => $node_info['css_class'],
+        '#description' => t('Separate classes with a space.'),
+        '#maxlength' => 255,
       );
 
       $form['nodesinblock']['nodesinblock_weight'] = array(
@@ -365,6 +374,7 @@ function _nodesinblock_save($node, $op) {
     $nodeinblock->weight = $node->nodesinblock_weight;
     $nodeinblock->visibility = trim($node->nodesinblock_visibility);
     $nodeinblock->render = $node->nodesinblock_render;
+    $nodeinblock->css_class = $node->nodesinblock_css_class;
     drupal_write_record('nodesinblock', $nodeinblock);
   }
 
@@ -401,7 +411,7 @@ function _nodesinblock_show($delta, $visibility) {
 
   $query = db_select('nodesinblock', 'nib');
   $query->join('node', 'n', 'nib.nid = n.nid');
-  $query->fields('nib', array('nid', 'visibility', 'render', 'weight'))
+  $query->fields('nib', array('nid', 'visibility', 'render', 'weight', 'css_class'))
   ->condition('n.status', 1)
     ->condition('delta', $delta)
     ->orderBy('weight', 'ASC')
@@ -436,6 +446,7 @@ function _nodesinblock_show($delta, $visibility) {
         }
 
         $node->nodesinblock = TRUE;
+        $node->nodesinblock_css_class = $row->css_class;
 
         // In case the the render selection has changed, make sure
         // we select the exact render mode.
@@ -445,6 +456,7 @@ function _nodesinblock_show($delta, $visibility) {
 
         // Assemble classes.
         $classes = array('nodesinblock');
+        if (!empty($row->css_class)) $classes[] = $row->css_class;
         if ($i == 0) $classes[] = 'first';
         if ($i == $num_items - 1) $classes[] = 'last';
         if ($i %2 == 0) $classes[] = 'odd'; else $classes[] = 'even';
