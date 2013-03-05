@@ -1,0 +1,26 @@
+language: php
+php:
+  - 5.4
+
+mysql:
+  database: drupal
+  username: root
+  encoding: utf8
+
+before_script:
+ - mysql -e 'create database drupal;'
+ - pyrus channel-discover pear.drush.org
+ - pyrus install drush/drush
+ - phpenv rehash
+ - drush dl --yes drupal
+ - cd drupal-*
+ - drush si standard --db-url=mysql://root:@localhost/drupal --yes
+ - git clone -b 7.x-1.x https://github.com/Ozmodiar/nodesinblock.git sites/all/modules/nodesinblock
+ - drush en --yes nodesinblock
+ - drush en --yes simpletest
+ - drush cc all
+ - drush runserver --server=builtin 8080 &
+ - sleep 4
+ - drush vset --yes simpletest_verbose FALSE
+
+script: drush test-run Nodes\ in\ block --xml --uri=http://127.0.0.1:8080
