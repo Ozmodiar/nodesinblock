@@ -1,3 +1,7 @@
+Current build status
+--------------------
+[![Build Status](https://secure.travis-ci.org/Ozmodiar/nodesinblock.png?branch=7.x-1.x)](http://travis-ci.org/Ozmodiar/nodesinblock)
+
 Changelog
 ---------
 - Issue #1504562 by Daluxz: Clear configuration-button not working (http://drupal.org/node/1504562).
