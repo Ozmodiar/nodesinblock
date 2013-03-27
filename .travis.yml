@@ -15,7 +15,7 @@ before_script:
  - drush dl --yes drupal
  - cd drupal-*
  - drush si standard --db-url=mysql://root:@localhost/drupal --yes
- - git clone -b 7.x-1.x https://github.com/Ozmodiar/nodesinblock.git sites/all/modules/nodesinblock
+ - git clone -b ${TRAVIS_BRANCH} https://github.com/${TRAVIS_REPO_SLUG}.git sites/all/modules/nodesinblock
  - drush en --yes nodesinblock
  - drush en --yes simpletest
  - drush cc all
