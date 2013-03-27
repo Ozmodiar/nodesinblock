@@ -172,13 +172,15 @@ function nodesinblock_form_node_form_alter(&$form, $form_state) {
         '#maxlength' => 255,
       );
 
-      $form['nodesinblock']['nodesinblock_weight'] = array(
-        '#type' => 'weight',
-        '#title' => t('Weight'),
-        '#default_value' => $node_info['weight'],
-        '#delta' => 30,
-        '#description' => t('Where the node is positioned in the block.'),
-      );
+      if (user_access('administer nodes in block queue')) {
+        $form['nodesinblock']['nodesinblock_weight'] = array(
+          '#type' => 'weight',
+          '#title' => t('Weight'),
+          '#default_value' => $node_info['weight'],
+          '#delta' => 30,
+          '#description' => t('Where the node is positioned in the block'),
+        );
+      }
 
       $form['nodesinblock']['nodesinblock_render'] = array(
         '#type' => 'select',
