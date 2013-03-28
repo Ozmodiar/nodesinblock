@@ -4,6 +4,7 @@ Current build status
 
 Changelog
 ---------
+- Issue #1855058 by drzraf: Wrong blocks URL (http://drupal.org/node/1855058).
 - Issue #1504562 by Daluxz: Clear configuration-button not working (http://drupal.org/node/1504562).
 - Issue #1923948 by Ozmodiar: Add custom CSS class support (http://drupal.org/node/1923948).
 - Issue #1613260 by ekoedmedia: Missing Weight on Nodes in Block Page (http://drupal.org/node/1613260).

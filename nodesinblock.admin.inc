@@ -16,7 +16,7 @@ function nodesinblock_settings() {
   $form['nodesinblock'] = array(
     '#type' => 'fieldset',
     '#title' => t('General settings'),
-    '#description' => t('Select number of blocks to create and associate content types which nodes can be used to insert as content in a block. When you change the number, be sure to goto the <a href="@url">block configuration</a> page so the block settings are updated in the database. When at least one content type is selected, two fieldsets will become available after clicking the submit button where you can change general settings and associate content types per block.', array('@url' => url('admin/build/block'))),
+    '#description' => t('Select number of blocks to create and associate content types which nodes can be used to insert as content in a block. When you change the number, be sure to goto the <a href="@url">block configuration</a> page so the block settings are updated in the database. When at least one content type is selected, two fieldsets will become available after clicking the submit button where you can change general settings and associate content types per block.', array('@url' => url('admin/structure/block'))),
   );
   $form['nodesinblock']['nodesinblock_nrofblocks'] = array(
     '#type' => 'select',
