@@ -1,6 +1,6 @@
 Current build status
 --------------------
-[![Build Status](https://secure.travis-ci.org/Ozmodiar/nodesinblock.png?branch=7.x-1.x-dev)](http://travis-ci.org/Ozmodiar/nodesinblock)
+[![Build Status](https://secure.travis-ci.org/Ozmodiar/nodesinblock.png?branch=7.x-1.x)](http://travis-ci.org/Ozmodiar/nodesinblock)
 
 Changelog
 ---------
