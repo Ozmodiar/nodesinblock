@@ -177,5 +177,14 @@ class NodesInBlockTestCase extends DrupalWebTestCase {
     $visib = explode("\n", $visib);
     $this->assertFalse(in_array('user', $visib, 'user visibility not found.'));
     $this->assertTrue(in_array('node/add', $visib, 'node/add visibility found.'));
+
+    // Check if weight field is only available with the correct permissions.
+    $this->drupalGet('node/add/page');
+    $this->assertNoFieldById('edit-nodesinblock-weight', 'Admin user can alter weight directly');
+    $this->drupalLogout();
+    $normal_user = $this->drupalCreateUser(array('bypass node access', 'access administration pages', 'administer blocks', 'administer nodes', 'administer nodes in block configuration'));
+    $this->drupalLogin($normal_user);
+    $this->drupalGet('node/add/page');
+    $this->assertNoFieldById('edit-nodesinblock-weight', 'Normal user cannot alter weight directly');
   }
 }
