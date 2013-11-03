@@ -208,7 +208,7 @@ function nodesinblock_form_node_form_alter(&$form, $form_state) {
  * Implements hook_node_validate().
  */
 function nodesinblock_node_validate($node) {
-  if (isset($node->nodesinblock_enable)) {
+  if (isset($node->nodesinblock_enable) && !user_access('deny configuration on node form')) {
     _nodesinblock_validate($node);
   }
 }
@@ -362,43 +362,44 @@ function _nodeisblock_load($node) {
  * Function callback: save node settings into nodesinblock table and update block visibility pages.
  */
 function _nodesinblock_save($node, $op) {
+    // Delete old record.
+    db_delete('nodesinblock')
+      ->condition('nid', $node->nid)
+      ->execute();
 
-  // Delete old record.
-  db_delete('nodesinblock')
-    ->condition('nid', $node->nid)
-    ->execute();
+  if (!user_access('deny configuration on node form')) {
+    // Save if node is not deleted
+    if ($op != 'delete' && $node->nodesinblock_delta != -1) {
+      $nodeinblock = new stdClass;
+      $nodeinblock->nid = $node->nid;
+      $nodeinblock->delta = $node->nodesinblock_delta;
+      $nodeinblock->weight = $node->nodesinblock_weight;
+      $nodeinblock->visibility = trim($node->nodesinblock_visibility);
+      $nodeinblock->render = $node->nodesinblock_render;
+      $nodeinblock->css_class = $node->nodesinblock_css_class;
+      drupal_write_record('nodesinblock', $nodeinblock);
+    }
 
-  // Save if node is not deleted
-  if ($op != 'delete' && $node->nodesinblock_delta != -1) {
-    $nodeinblock = new stdClass;
-    $nodeinblock->nid = $node->nid;
-    $nodeinblock->delta = $node->nodesinblock_delta;
-    $nodeinblock->weight = $node->nodesinblock_weight;
-    $nodeinblock->visibility = trim($node->nodesinblock_visibility);
-    $nodeinblock->render = $node->nodesinblock_render;
-    $nodeinblock->css_class = $node->nodesinblock_css_class;
-    drupal_write_record('nodesinblock', $nodeinblock);
+    // Get visibility paths.
+    $visibility = array();
+    $result = db_query("SELECT visibility FROM {nodesinblock} nib INNER JOIN {node} n on n.nid = nib.nid WHERE nib.delta = :delta AND n.status = 1", array(':delta' => $node->nodesinblock_delta));
+    foreach ($result as $row) {
+      $node_visibility = explode("\n", $row->visibility);
+      foreach ($node_visibility as $path)
+        $visibility[] = trim($path);
+    }
+
+    // Update blocks table.
+    $visibility = array_unique($visibility);
+    db_update('block')
+      ->condition('module', 'nodesinblock')
+      ->condition('delta', $node->nodesinblock_delta)
+      ->fields(array(
+          'visibility' => variable_get('nodesinblock_visibility_' . $node->nodesinblock_delta, '1'),
+          'pages' => implode("\n", $visibility)
+        ))
+      ->execute();
   }
-
-  // Get visibility paths.
-  $visibility = array();
-  $result = db_query("SELECT visibility FROM {nodesinblock} nib INNER JOIN {node} n on n.nid = nib.nid WHERE nib.delta = :delta AND n.status = 1", array(':delta' => $node->nodesinblock_delta));
-  foreach ($result as $row) {
-    $node_visibility = explode("\n", $row->visibility);
-    foreach ($node_visibility as $path)
-    $visibility[] = trim($path);
-  }
-
-  // Update blocks table.
-  $visibility = array_unique($visibility);
-  db_update('block')
-    ->condition('module', 'nodesinblock')
-    ->condition('delta', $node->nodesinblock_delta)
-    ->fields(array(
-      'visibility' => variable_get('nodesinblock_visibility_' . $node->nodesinblock_delta, '1'),
-      'pages' => implode("\n", $visibility)
-    ))
-    ->execute();
 }
 
 /**
