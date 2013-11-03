@@ -362,12 +362,13 @@ function _nodeisblock_load($node) {
  * Function callback: save node settings into nodesinblock table and update block visibility pages.
  */
 function _nodesinblock_save($node, $op) {
+  global $user;
+  if ($user->uid == 1 || !user_access('deny configuration on node form')) {
     // Delete old record.
     db_delete('nodesinblock')
       ->condition('nid', $node->nid)
       ->execute();
 
-  if (!user_access('deny configuration on node form')) {
     // Save if node is not deleted
     if ($op != 'delete' && $node->nodesinblock_delta != -1) {
       $nodeinblock = new stdClass;
