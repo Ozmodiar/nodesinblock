@@ -401,6 +401,12 @@ function _nodesinblock_save($node, $op) {
         ))
       ->execute();
   }
+  elseif ($op == 'delete') {
+    // Delete old record.
+    db_delete('nodesinblock')
+      ->condition('nid', $node->nid)
+      ->execute();
+  }
 }
 
 /**
